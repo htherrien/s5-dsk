@@ -1,2 +1,2 @@
-# s5-dsk
-Code CCS du DSK
+# s5-dsp
+Code CCS du DSP
