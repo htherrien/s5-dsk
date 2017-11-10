@@ -12,7 +12,7 @@
 #include "correlation.h"
 
  int* correlation64(int* p_signal1,
-                    int* p_signal_ref,
+                    int* p_signalRef,
                     long long* p_sortie,
                     int* p_moyenne)
 {
@@ -21,7 +21,7 @@
   p_signal1++;
   while(i--)
   {
-    accumulateur += p_signal1[i]*p_signal_ref[i];
+    accumulateur += p_signal1[i]*p_signalRef[i];
     somme += abs(p_signal1[i]);
   }
   *p_sortie = accumulateur;

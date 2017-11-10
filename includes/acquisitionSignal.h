@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Projet S5
- * @file    acquisition_signal.h
+ * @file    acquisitionSignal.h
  * @author  Hugo Therrien
  * @date    8 novembre 2017
  * @version 0.1
@@ -12,7 +12,7 @@
 #ifndef ACQUISITION_SIGNAL_H
 #define ACQUISITION_SIGNAL_H
 
-#include "signaux3axes.h"
+#include "signaux3Axes.h"
 
 #define TRESHOLD_X    40367877LL
 #define TRESHOLD_Y   810989952LL
@@ -43,12 +43,12 @@
  *     Si la corrélation est réussie, allumer la DEL1 et éteindre la DEL2
  *     Si la correlation échoue, allumer DEL2 et eintendre la DEL1
  */
-void acquistion_correlation_demo(Signal3AxesPtr *p_signalACorrelerPtr);
+void acquistionCorrelationDemo(Signal3AxesPtr *p_signalACorrelerPtr);
 
 /*
  * Vide les tampons du signal à correler (initialise tous les éléments à 0)
  */
-void vider_tampon_acquisition_correl(Signal3AxesPtr* p_tamponAcquisitionPtr);
+void viderTamponAcquisitionCorrel(Signal3AxesPtr* p_tamponAcquisitionPtr);
 
 
 #endif /* ACQUISITION_SIGNAL_H */

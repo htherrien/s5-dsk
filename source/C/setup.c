@@ -9,9 +9,9 @@
  *
  ******************************************************************************/
 
-#include <acquisition_signal.h>
 #include <dsk6713_led.h>
 
+#include "acquisitionSignal.h"
 #include "setup.h"
 #include "dsk.h"
 

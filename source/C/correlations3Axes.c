@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Projet S5
- * @file    correlations3axes.c
+ * @file    correlations3Axes.c
  * @author  Hugo Therrien
  * @date    8 novembre 2017
  * @version 0.1
@@ -9,10 +9,11 @@
  *
  ******************************************************************************/
 
-#include <correlationASM.h>
 #include <dsk6713_led.h>
 #include <math.h>
-#include "correlations3axes.h"
+
+#include "correlationASM.h"
+#include "correlations3Axes.h"
 
 #define TRESHOLD_CORREL 0.90F
 
