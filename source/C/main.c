@@ -9,24 +9,24 @@
  *
  ******************************************************************************/
 
-#include <acquisition_signal.h>
 #include <dsk6713_dip.h>
 #include <dsk6713_led.h>
 
-#include "setup.h"
-#include "enable_interrupts.h"
-#include "signaux3axes.h"
 #include "acquisition_signal.h"
-#include "correlations3axes.h"
+#include "setup.h"
+#include "enableInterrupts.h"
+#include "signaux3Axes.h"
+#include "acquisitionSignal.h"
+#include "correlations3Axes.h"
 
-int dip_status = 0;
+int dipStatus = 0;
 extern int signal1_x[], signal1_y[], signal1_z[];
 
 static Signal3AxesCorr signalACorreler; // Déja aligné.
 
 static Signal3AxesReference signalReference;
 
-void init_signal_reference(void)
+void initSignalReference(void)
 {
     int i;
     for(i = 0; i < TAILLE_CORR; i++)
@@ -43,7 +43,7 @@ interrupt void intTimer0(void)
 {
     static Signal3AxesPtr signalACorrelerPtr = {signalACorreler.x, signalACorreler.y, signalACorreler.z};
     int resultat;
-    acquistion_correlation_demo(&signalACorrelerPtr);
+    acquistionCorrelationDemo(&signalACorrelerPtr);
     resultat = correler3Axes(&signalACorrelerPtr, &signalReference);
     if(resultat)
     {
@@ -59,11 +59,11 @@ interrupt void intTimer0(void)
 void main(void)
 {
   setup();
-  init_signal_reference();
-  enable_interrupts();
+  initSignalReference();
+  enableInterrupts();
 
   for(;;)
   {
-      dip_status = !DSK6713_DIP_get(0) + (!DSK6713_DIP_get(1)<<1) + (!DSK6713_DIP_get(2)<<2) + (!DSK6713_DIP_get(3)<<3);
+      dipStatus = !DSK6713_DIP_get(0) + (!DSK6713_DIP_get(1)<<1) + (!DSK6713_DIP_get(2)<<2) + (!DSK6713_DIP_get(3)<<3);
   }
 }

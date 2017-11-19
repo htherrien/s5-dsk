@@ -12,7 +12,7 @@
 #ifndef CORRELATION_3_AXES_H
 #define CORRELATION_3_AXES_H
 
-#include "signaux3axes.h"
+#include "signaux3Axes.h"
 
 void correler3AxesDemo(Signal3AxesPtr* p_signalACorrelerPtr, Signal3AxesReference* p_signal3AxesReference);
 
@@ -26,7 +26,5 @@ int correler3Axes(Signal3AxesPtr* p_signalACorrelerPtr, Signal3AxesReference* p_
  * Remplit la structure Signal3AxesReference à partir des données comprises dans ses champs x,y et z
  */
 void autoCorreler3Axes(Signal3AxesReference* p_signal3AxesReference);
-
-
 
 #endif /* CORRELATION_3_AXES_H */

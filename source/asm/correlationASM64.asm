@@ -1,6 +1,6 @@
 ;****************************************************************************************
 ; APPEL :
-; int* correlationASM_optimise_bc64ech_glissante(int* p_signal, int p_signal_ref[], long long* p_sortie, int* p_moyenne);
+; int* correlationASM64(int* p_signal, int p_signal_ref[], long long* p_sortie, int* p_moyenne);
 ;
 ;
 ; Parametres

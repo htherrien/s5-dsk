@@ -12,6 +12,6 @@
 #ifndef ENABLE_INTERRUPTS_H
 #define ENABLE_INTERRUPTS_H
 
-extern void enable_interrupts(void);
+extern void enableInterrupts(void);
 
 #endif /* ENABLE_INTERRUPTS_H */

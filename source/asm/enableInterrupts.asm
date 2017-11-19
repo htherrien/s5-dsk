@@ -1,7 +1,7 @@
 ;****************************************************************************************
 ; Copyright Projet S5 - Les S de Sherbrooke
 ;
-; Fichier: enable_interrupts.asm
+; Fichier: enableInterrupts.asm
 ; Auteur : Hugo Therrien
 ; Date   : 7 novembre 2017
 ; Rev.   : 0.1
@@ -11,9 +11,9 @@
 ;
 ;****************************************************************************************
 
-	.def _enable_interrupts
+	.def _enableInterrupts
 
-_enable_interrupts
+_enableInterrupts
 	.asmfunc
 
 	; Enable interrupt 14 (Timer 0)

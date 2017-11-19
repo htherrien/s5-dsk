@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Projet S5
- * @file    acquisition_signal.c
+ * @file    acquisitionSignal.c
  * @author  Hugo Therrien
  * @date    8 novembre 2017
  * @version 0.1
@@ -12,17 +12,17 @@
 
 #include <dsk6713_led.h>
 
-#include "acquisition_signal.h"
+#include "acquisitionSignal.h"
 #include "capteurs.dat" // Signaux enregistres
 
-extern int dip_status;
+extern int dipStatus;
 
-void acquistion_correlation_demo(Signal3AxesPtr *p_signalACorrelerPtr)
+void acquistionCorrelationDemo(Signal3AxesPtr *p_signalACorrelerPtr)
 {
     static int i = 0;
 
     /* Acquisition en fonction des DIPs */
-    switch(dip_status)
+    switch(dipStatus)
     {
     case 0:
         *p_signalACorrelerPtr->x = 0;
@@ -85,7 +85,7 @@ void acquistion_correlation_demo(Signal3AxesPtr *p_signalACorrelerPtr)
     }
 }
 
-void vider_tampon_acquisition_correl(Signal3AxesPtr* p_tamponAcquisitionPtr)
+void viderTamponAcquisitionCorrel(Signal3AxesPtr* p_tamponAcquisitionPtr)
 {
     int i;
     for(i = 0; i < TAILLE_CORR; i++)
