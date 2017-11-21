@@ -12,7 +12,7 @@
 #include <dsk6713_dip.h>
 #include <dsk6713_led.h>
 
-#include "acquisition_signal.h"
+#include "acquisitionSignal.h"
 #include "setup.h"
 #include "enableInterrupts.h"
 #include "signaux3Axes.h"
@@ -28,10 +28,22 @@ static Signal3AxesReference signalReference;
 
 void initSignalReference(void)
 {
-    int i;
+    int i, signalfiltre[64];
+    for(i = 0; i < 64; i++)
+    {
+        signalfiltre[i] = 0;
+    }
+    //Filtrage des donnees
+    for (i = 5;i<64;i++)
+    {
+        signalfiltre[i] = FIR1(signal1_x);
+    }
+
+
     for(i = 0; i < TAILLE_CORR; i++)
     {
         signalReference.x[i] = signal1_x[i];
+
         signalReference.y[i] = signal1_y[i];
         signalReference.z[i] = signal1_z[i];
     }
