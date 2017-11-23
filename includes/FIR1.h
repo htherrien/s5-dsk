@@ -14,13 +14,14 @@
 #include <stdio.h>
 
 // PROTOTYPES
-int FIR1(int tableauInput[]);
+int FIR1(int tableauInput[],int position);
 
 // DEFINITIONS
 // Global
 
-const int Ordre = 4;
-float coeffFIR1 = 0.2;
+const int Ordre = 49;
+float coeffFIR1 = 0.02;
+
 
 
 
