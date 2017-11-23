@@ -12,17 +12,24 @@
 #include <dsk6713_dip.h>
 #include <dsk6713_led.h>
 
-#include "acquisition_signal.h"
+#include "acquisitionSignal.h"
 #include "setup.h"
 #include "enableInterrupts.h"
 #include "signaux3Axes.h"
 #include "acquisitionSignal.h"
 #include "correlations3Axes.h"
+#include "FaireFFT.h"
 
 int dipStatus = 0;
 extern int signal1_x[], signal1_y[], signal1_z[];
 
 static Signal3AxesCorr signalACorreler; // Déja aligné.
+
+// FFT (daml2601)
+static float signalAFFT[2*TAILLE_FFT];
+#pragma DATA_ALIGN(signalAFFT, 8)
+
+
 
 static Signal3AxesReference signalReference;
 
@@ -45,6 +52,18 @@ interrupt void intTimer0(void)
     int resultat;
     acquistionCorrelationDemo(&signalACorrelerPtr);
     resultat = correler3Axes(&signalACorrelerPtr, &signalReference);
+
+    // FFT (daml2601)
+    int resultat_fft = 0;
+    static int i = 0;
+    acquistionCorrelationDemoFFT(&signalAFFT[i]);
+    i = i + 2;
+    if (i == 2*TAILLE_FFT)
+    {
+        resultat_fft = faireFFT(signalAFFT);
+        i = 0;
+    }
+
     if(resultat)
     {
         DSK6713_LED_on(0);
@@ -52,6 +71,14 @@ interrupt void intTimer0(void)
     else
     {
         DSK6713_LED_off(0);
+    }
+    if(resultat_fft)
+    {
+        DSK6713_LED_on(3);
+    }
+    else
+    {
+        DSK6713_LED_off(3);
     }
 }
 

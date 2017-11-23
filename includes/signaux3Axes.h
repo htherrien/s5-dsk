@@ -49,4 +49,7 @@ typedef struct
     int* z;
 }Signal3AxesPtr;
 
+// FFT (daml2601)
+#define TAILLE_FFT 256
+
 #endif /* SIGNAUX_3_AXES_H */

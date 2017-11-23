@@ -29,4 +29,10 @@ void configAndStartTimer0AsClock10Hz(void);
  */
 void configAndStartTimer0AsClock30Hz(void);
 
+/*
+ * @brief Configures timer 0 as a 300 Hz timer
+ *        for more information, consult spru582b.pdf
+ */
+void configAndStartTimer0AsClock300Hz(void);
+
 #endif /* SETUP_H */
