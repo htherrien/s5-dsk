@@ -32,11 +32,11 @@ Propri√©t√© : Les S de Sherbrooke
   Note :
 */
 
-int FIR1(int tableauInput[])
+int FIR1(int tableauInput[],int position)
 {
     int OUT = 0;
     int temp = 0;
-    static int position = 0;
+
 
     //int coeffFIR1 = 1/(Ordre+1);
 // Boucle qui inclu les Èchantillon passÈ en fonction de l'Ordre du filtre

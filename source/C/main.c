@@ -19,8 +19,11 @@
 #include "acquisitionSignal.h"
 #include "correlations3Axes.h"
 
+
+
 int dipStatus = 0;
 extern int signal1_x[], signal1_y[], signal1_z[];
+//extern int position;
 
 static Signal3AxesCorr signalACorreler; // Déja aligné.
 
@@ -28,26 +31,54 @@ static Signal3AxesReference signalReference;
 
 void initSignalReference(void)
 {
-    int i, signalfiltre[64];
-    for(i = 0; i < 64; i++)
-    {
-        signalfiltre[i] = 0;
-    }
-    //Filtrage des donnees
-    for (i = 5;i<64;i++)
-    {
-        signalfiltre[i] = FIR1(signal1_x);
-    }
-
-
+    int i;
     for(i = 0; i < TAILLE_CORR; i++)
     {
         signalReference.x[i] = signal1_x[i];
-
         signalReference.y[i] = signal1_y[i];
         signalReference.z[i] = signal1_z[i];
     }
     autoCorreler3Axes(&signalReference);
+
+}
+
+void filtrerSignalRef(void)
+{
+    //Pour le test du filtrage
+    int signalfiltre440x_1[991];
+    int signalfiltre440y_1[991];
+    int signalfiltre440z_1[991];
+
+    int i;
+    for(i = 0; i < 991; i++)
+       {
+        signalfiltre440x_1[i]= 0;
+       }
+    for(i = 0; i < 991; i++)
+       {
+        signalfiltre440y_1[i]= 0;
+       }
+    for(i = 0; i < 991; i++)
+       {
+        signalfiltre440z_1[i]= 0;
+       }
+
+    //Filtrage des donnees
+    for (i = 49;i<991;i++)
+        {
+            signalfiltre440x_1[i] = FIR1(signal1_x,(i-49));
+        }
+    //position = 0;
+    for (i = 49;i<991;i++)
+        {
+            signalfiltre440y_1[i] = FIR1(signal1_y,(i-49));
+        }
+    //position = 0;
+    for (i = 49;i<991;i++)
+        {
+            signalfiltre440z_1[i] = FIR1(signal1_z,(i-49));
+        }
+
 }
 
 
@@ -73,6 +104,8 @@ void main(void)
   setup();
   initSignalReference();
   enableInterrupts();
+  filtrerSignalRef();
+
 
   for(;;)
   {
