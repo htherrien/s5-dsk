@@ -8,7 +8,7 @@
  ******************************************************************************/
 #include <DSPF_sp_cfftr2_dit.h>
 #include "twiddles_512.h"
-#include "signaux3Axes.h"
+#include "signaux.h"
 #include "faireFFT.h"
 #include "hamming.h"
 

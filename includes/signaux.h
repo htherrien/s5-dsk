@@ -1,31 +1,36 @@
 /*******************************************************************************
  * Projet S5
- * @file    signaux3Axes.h
+ * @file    signaux.h
  * @author  Hugo Therrien
  * @date    8 novembre 2017
  * @version 0.1
  *
  * Définit des structures de données utiles pour les signaux à 3 axes
  *
- * TODO
- * + Ajouter les définitions pour la FFT
- * + Ajouter les définitons pour le filtrage
  *
  ******************************************************************************/
 
-#ifndef SIGNAUX_3_AXES_H
-#define SIGNAUX_3_AXES_H
+#ifndef SIGNAUX_H
+#define SIGNAUX_H
+
+#include <cassert.h>
 
 #define TAILLE_CORR 64
 
+#define TAILLE_FFT 256
+
+#define TAILLE_MOYENNE_MOBILE 50
+
+/* Vérifie que la MOYENNE a un taille plus petite que la correlation */
+CASSERT(TAILLE_MOYENNE_MOBILE <= TAILLE_CORR, signaux)
 
 typedef struct
 {
     int x[TAILLE_CORR];
     int y[TAILLE_CORR];
     int z[TAILLE_CORR];
-}Signal3AxesCorr;
-#pragma STRUCT_ALIGN(Signal3AxesCorr, TAILLE_CORR*4);
+}Signal3Axes;
+#pragma STRUCT_ALIGN(Signal3Axes, TAILLE_CORR*4);
 
 typedef struct
 {
@@ -49,7 +54,4 @@ typedef struct
     int* z;
 }Signal3AxesPtr;
 
-// FFT (daml2601)
-#define TAILLE_FFT 256
-
-#endif /* SIGNAUX_3_AXES_H */
+#endif /* SIGNAUX_H */

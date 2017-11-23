@@ -1,9 +1,9 @@
 /*******************************************************************************
  * Projet S5
  * @file    main.c
- * @author  Hugo Therrien
- * @date    7 novembre 2017
- * @version 0.4
+ * @author  Hugo Therrien, Hugo Daniel, Louis D'Amour
+ * @date    23 novembre 2017
+ * @version 0.5
  *
  * Fichier de démo de la correlation.
  *
@@ -15,79 +15,46 @@
 #include "acquisitionSignal.h"
 #include "setup.h"
 #include "enableInterrupts.h"
-#include "signaux3Axes.h"
+#include "signaux.h"
 #include "acquisitionSignal.h"
 #include "correlations3Axes.h"
 #include "FaireFFT.h"
-
-
+#include "moyenneMobile.h"
 
 int dipStatus = 0;
 extern int signal1_x[], signal1_y[], signal1_z[];
 //extern int position;
 
-static Signal3AxesCorr signalACorreler; // Déja aligné.
+static Signal3Axes signalACorreler; // Déja aligné.
 
 // FFT (daml2601)
 static float signalAFFT[2*TAILLE_FFT];
 #pragma DATA_ALIGN(signalAFFT, 8)
 
-
-
 static Signal3AxesReference signalReference;
 
+/*!! Lors de l'acquisition, il va falloi prévoir un tampon de taille TAILLE_CORR + TAILLE_MOYENNE_MOBILE */
 void initSignalReference(void)
 {
     int i;
+    Signal3AxesReference tampon_acquisition;
     for(i = 0; i < TAILLE_CORR; i++)
     {
-        signalReference.x[i] = signal1_x[i];
-        signalReference.y[i] = signal1_y[i];
-        signalReference.z[i] = signal1_z[i];
+        tampon_acquisition.x[i] = signal1_x[i];
+        tampon_acquisition.y[i] = signal1_y[i];
+        tampon_acquisition.z[i] = signal1_z[i];
     }
+    /* Filtrage du signal */
+    for(i = 0; i < TAILLE_CORR; i++)
+    {
+        moyenneMobile64(&tampon_acquisition.x[i], &signalReference.x[i], TAILLE_MOYENNE_MOBILE);
+        moyenneMobile64(&tampon_acquisition.y[i], &signalReference.y[i], TAILLE_MOYENNE_MOBILE);
+        moyenneMobile64(&tampon_acquisition.z[i], &signalReference.z[i], TAILLE_MOYENNE_MOBILE);
+    }
+
     autoCorreler3Axes(&signalReference);
 
 }
-
-void filtrerSignalRef(void)
-{
-    //Pour le test du filtrage
-    int signalfiltre440x_1[991];
-    int signalfiltre440y_1[991];
-    int signalfiltre440z_1[991];
-
-    int i;
-    for(i = 0; i < 991; i++)
-       {
-        signalfiltre440x_1[i]= 0;
-       }
-    for(i = 0; i < 991; i++)
-       {
-        signalfiltre440y_1[i]= 0;
-       }
-    for(i = 0; i < 991; i++)
-       {
-        signalfiltre440z_1[i]= 0;
-       }
-
-    //Filtrage des donnees
-    for (i = 49;i<991;i++)
-        {
-            signalfiltre440x_1[i] = FIR1(signal1_x,(i-49));
-        }
-    //position = 0;
-    for (i = 49;i<991;i++)
-        {
-            signalfiltre440y_1[i] = FIR1(signal1_y,(i-49));
-        }
-    //position = 0;
-    for (i = 49;i<991;i++)
-        {
-            signalfiltre440z_1[i] = FIR1(signal1_z,(i-49));
-        }
-
-}
-
 
 interrupt void intTimer0(void)
 {
@@ -125,14 +92,14 @@ interrupt void intTimer0(void)
     }
 }
 
+int SIGNAL_A_FILTRER[TAILLE_CORR];
+#pragma DATA_ALIGN(SIGNAL_A_FILTRER, TAILLE_CORR*sizeof(int));
 
 void main(void)
 {
   setup();
   initSignalReference();
   enableInterrupts();
-  filtrerSignalRef();
-
 
   for(;;)
   {
