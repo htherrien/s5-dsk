@@ -12,7 +12,7 @@
 #ifndef CORRELATION_3_AXES_H
 #define CORRELATION_3_AXES_H
 
-#include "signaux3Axes.h"
+#include "signaux.h"
 
 void correler3AxesDemo(Signal3AxesPtr* p_signalACorrelerPtr, Signal3AxesReference* p_signal3AxesReference);
 
