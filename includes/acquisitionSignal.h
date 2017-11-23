@@ -1,9 +1,9 @@
 /*******************************************************************************
  * Projet S5
  * @file    acquisitionSignal.h
- * @author  Hugo Therrien
- * @date    8 novembre 2017
- * @version 0.1
+ * @author  Hugo Therrien, Louis D'Amour, Hugo Daniel
+ * @date    23 novembre 2017
+ * @version 0.3
  *
  * Fonctions manipulation les données dans les tampons d'acquisition
  *
@@ -12,7 +12,7 @@
 #ifndef ACQUISITION_SIGNAL_H
 #define ACQUISITION_SIGNAL_H
 
-#include "signaux3Axes.h"
+#include "signaux.h"
 
 #define TRESHOLD_X    40367877LL
 #define TRESHOLD_Y   810989952LL
@@ -45,10 +45,8 @@
  */
 void acquistionCorrelationDemo(Signal3AxesPtr *p_signalACorrelerPtr);
 
-/*
- * Vide les tampons du signal à correler (initialise tous les éléments à 0)
- */
-void viderTamponAcquisitionCorrel(Signal3AxesPtr* p_tamponAcquisitionPtr);
+
+void acquistionCorrelationDemoFFT(float *p_signalAFFTrPtr);
 
 
 #endif /* ACQUISITION_SIGNAL_H */
