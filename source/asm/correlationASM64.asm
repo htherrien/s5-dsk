@@ -56,7 +56,7 @@ _correlationASM64:
 	MVKH 0xE00002, B9	; Utiliser BK1 avec une longueur de 256 octets
 	MVC B9, AMR
 
-; longl long accumulateur = 0;
+; long long accumulateur = 0;
 	MVK 0, A2
 	MVK 0, A3
 
