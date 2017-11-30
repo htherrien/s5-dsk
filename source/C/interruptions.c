@@ -70,11 +70,8 @@ interrupt void c_int04(void)
 {
     static int UARTData;
     extern MCBSP_Handle MCBSP0Handle;
+
     MCBSP_write(MCBSP0Handle, SPI_READ_DATA);
     DSK6713_waitusec(10);
-    UARTData = (MCBSP_read(MCBSP0Handle) & 0x00FF);
-    if(0x34 == UARTData)
-    {
-        int a = 1;
-    }
+    UARTData = (MCBSP_read(MCBSP0Handle) & 0xFF);
 }

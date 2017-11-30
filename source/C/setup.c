@@ -16,6 +16,7 @@
 #include "acquisitionSignal.h"
 #include "dsk.h"
 #include "moyenneMobile.h"
+#include "correlations3Axes.h"
 
 void setup(void)
 {
@@ -77,14 +78,12 @@ void initSignalReference(Signal3AxesReference* signalReference)
         moyenneMobile64(&tampon_acquisition.z[i], &signalReference->z[i], TAILLE_MOYENNE_MOBILE);
     }
 
-    autoCorreler3Axes(&signalReference);
+    autoCorreler3Axes(signalReference);
 }
 
 
-void int4_init(GPIO_Handle* gpHandle, void* vectors)
+void pinConfig(GPIO_Handle* gpHandle, void* vectors)
 {
-    //extern void vectors();
-    *gpHandle = GPIO_open(GPIO_DEV0, GPIO_OPEN_RESET);
     // Set pin4 as interrupt on falling edge
     GPIO_pinEnable(*gpHandle, GPIO_PIN4);
     GPIO_pinDirection(*gpHandle, GPIO_PIN4, GPIO_INPUT);

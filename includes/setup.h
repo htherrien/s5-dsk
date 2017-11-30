@@ -46,6 +46,6 @@ void initSignalReference(Signal3AxesReference* signalReference);
 /*
  * @brief Setups pin4 as an interrupt on the falling edge
  */
-void int4_init(GPIO_Handle* gpHandle,  void* vectors);
+void pinConfig(GPIO_Handle* gpHandle,  void* vectors);
 
 #endif /* SETUP_H */
