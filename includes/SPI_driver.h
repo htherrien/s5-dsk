@@ -11,7 +11,7 @@
 #ifndef SPI_DRIVER_H
 #define SPI_DRIVER_H
 
-#define SPI_WRITE_CONFIG 0xE440
+#define SPI_WRITE_CONFIG 0xE441
 #define SPI_READ_CONFIG 0x4000
 #define SPI_WRITE_DATA(data) (0x8000 | ((data) & 0x00FF))
 #define SPI_READ_DATA 0x0000
