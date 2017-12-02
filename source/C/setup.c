@@ -89,11 +89,6 @@ void pinConfig(GPIO_Handle* gpHandle, void* vectors)
     GPIO_pinDirection(*gpHandle, GPIO_PIN4, GPIO_INPUT);
     GPIO_intPolarity(*gpHandle, GPIO_GPINT4, GPIO_FALLING);
 
-    // Set pin0 as low to enable Port1 on U2 on the DSK MotherBoard
-    GPIO_pinEnable(*gpHandle, GPIO_PIN0);
-    GPIO_pinDirection(*gpHandle, GPIO_PIN0, GPIO_OUTPUT);
-    GPIO_pinWrite(*gpHandle, GPIO_PIN0, 0);
-
     // Enable PIN4 interrupt
     IRQ_setVecs(vectors);
     IRQ_map(IRQ_EVT_GPINT4, 4);
