@@ -12,7 +12,7 @@
 
 #include "SPI_driver.h"
 
-static MCBSP_Config MCBSP_SPI_Cfg = {
+static MCBSP_Config MCBSP_SPI_CFG = {
 
         MCBSP_FMKS(SPCR, FREE, NO)              |
         MCBSP_FMKS(SPCR, SOFT, NO)              |
@@ -79,17 +79,23 @@ static MCBSP_Config MCBSP_SPI_Cfg = {
  * Sets McBSP0 as external and configures it in SPI mode for the MAX-3111.
  * Configures the MAX-3111.
  */
-void SPI_init(MCBSP_Handle* MCBSPHandle)
+void SPI_init(MCBSP_Handle* MCBSPHandle, const int DEV_NO)
 {
-    DSK6713_rset(DSK6713_MISC, DSK6713_rget(DSK6713_MISC) | 0x1); // Set McBSP0 as external
-
-    /* Verifies that the Handle is opened */
-    if((*MCBSPHandle)->allocated != 1)
+    if(DEV_NO == MCBSP_DEV0)
     {
-        *MCBSPHandle = MCBSP_open(MCBSP_DEV0, MCBSP_OPEN_RESET);
+        DSK6713_rset(DSK6713_MISC, DSK6713_rget(DSK6713_MISC) | 0x1); // Set McBSP0 as external
+    }
+    else if(DEV_NO == MCBSP_DEV1)
+    {
+        DSK6713_rset(DSK6713_MISC, DSK6713_rget(DSK6713_MISC) | 0x2); // Set McBSP1 as external
     }
 
-    MCBSP_config(*MCBSPHandle, &MCBSP_SPI_Cfg);                    // Config McBSP Device
+    if((*MCBSPHandle)->allocated != 1)
+    {
+        *MCBSPHandle = MCBSP_open(DEV_NO, MCBSP_OPEN_RESET);
+    }
+
+    MCBSP_config(*MCBSPHandle, &MCBSP_SPI_CFG);                    // Config McBSP Device
 
     MCBSP_start(*MCBSPHandle, MCBSP_RCV_START | MCBSP_XMIT_START | MCBSP_SRGR_START | MCBSP_SRGR_FRAMESYNC, 0x00003000);
 

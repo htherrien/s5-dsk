@@ -17,6 +17,6 @@
 #define SPI_READ_DATA 0x0000
 #define SPI_READ_MASK 0x00FF
 
-void SPI_init(MCBSP_Handle*);
+void SPI_init(MCBSP_Handle* MCBSPHandle, const int DEV_NO);
 
 #endif /* SPI_DRIVER_H */
