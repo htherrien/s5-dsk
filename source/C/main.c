@@ -37,17 +37,6 @@ void main(void)
   for(;;)
   {
       dipStatus = !DSK6713_DIP_get(0) + (!DSK6713_DIP_get(1)<<1) + (!DSK6713_DIP_get(2)<<2) + (!DSK6713_DIP_get(3)<<3);
-
       DSK6713_waitusec(1000*100);
-
-      //MCBSP_write(MCBSP0Handle, SPI_WRITE_DATA('B'));
-      //DSK6713_waitusec(10);
-      //MCBSP_read(MCBSP0Handle);
-
-      DSK6713_waitusec(1000*100);
-
-      MCBSP_write(MCBSP1Handle, SPI_WRITE_DATA('D'));
-      DSK6713_waitusec(10);
-      MCBSP_read(MCBSP1Handle);
   }
 }
