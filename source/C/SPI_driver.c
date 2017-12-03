@@ -1,10 +1,10 @@
 /********************************************************
-**  Session 5 - APP6 - Téléphonie par DSP
+**  Projet S5 - Les S de Sherbrooke
 **  Fichier SPI_driver.c
 **  Auteurs :
 **            Marc-André Roireau - roim1901
 **            Hugo Therrien      - theh2203
-**  Date : 13 novembre 2017
+**  Date : 3 décembre 2017
 ********************************************************/
 
 #include <csl_mcbsp.h>
