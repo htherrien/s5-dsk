@@ -22,6 +22,7 @@ void setup(void)
 {
     DSK6713_LED_init();
     configAndStartTimer0AsClock300Hz();
+    configAndStartTimer1AsClock3000Hz();
 }
 
 void configAndStartTimer0AsClock10Hz(void)
@@ -55,6 +56,17 @@ void configAndStartTimer0AsClock300Hz(void)
     CTL0 |= 0x00000004; /* TSTAT is driven on TOUT */
     CTL0 |= 0x00000001; /* TOUT is a timer output pin */
     CTL0 |= 0x000000C0; /* Start timer */
+}
+
+void configAndStartTimer1AsClock3000Hz(void)
+{
+    CTL1 &= ~0x00000080; /* Put clock in hold */
+    PRD1  = 9375;        /* Set clock frequency to 3000 Hz */
+    CTL1 |= 0x00000200; /* Set internal clock source */
+    CTL1 |= 0x00000100; /* Set as clock mode */
+    CTL1 |= 0x00000004; /* TSTAT is driven on TOUT */
+    CTL1 |= 0x00000001; /* TOUT is a timer output pin */
+    CTL1 |= 0x000000C0; /* Start timer */
 }
 
 /*!! Lors de l'acquisition, il va falloi prévoir un tampon de taille TAILLE_CORR + TAILLE_MOYENNE_MOBILE */

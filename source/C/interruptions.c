@@ -26,6 +26,9 @@ static float signalAFFT[2*TAILLE_FFT];
 static Signal3Axes signalACorreler; // Déja aligné.
 Signal3AxesReference signalReference;
 
+unsigned char MCBSP0SendBuffer[32];
+unsigned char MCBSP1SendBuffer[32];
+
 interrupt void intTimer0(void)
 {
     static Signal3AxesPtr signalACorrelerPtr = {signalACorreler.x, signalACorreler.y, signalACorreler.z};
@@ -63,11 +66,20 @@ interrupt void intTimer0(void)
 }
 
 /*
+ * Interruption d'envoi de données UART
+ */
+interrupt void intTimer1(void)
+{
+    ;
+}
+
+
+/*
  * Interruption de réception de données du PIC.
  */
 interrupt void c_int04(void)
 {
-    static int UARTData;
+    static char UARTData;
     extern MCBSP_Handle MCBSP0Handle;
 
     MCBSP_write(MCBSP0Handle, SPI_READ_DATA);
