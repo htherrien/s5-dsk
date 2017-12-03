@@ -80,10 +80,10 @@ interrupt void c_int04(void)
  */
 interrupt void c_int05(void)
 {
-    static int UARTData;
-    extern MCBSP_Handle MCBSP0Handle;
+    static char UARTData;
+    extern MCBSP_Handle MCBSP1Handle;
 
-    MCBSP_write(MCBSP0Handle, SPI_READ_DATA);
+    MCBSP_write(MCBSP1Handle, SPI_READ_DATA);
     DSK6713_waitusec(10);
-    UARTData = (MCBSP_read(MCBSP0Handle) & 0xFF);
+    UARTData = (MCBSP_read(MCBSP1Handle) & 0xFF);
 }
