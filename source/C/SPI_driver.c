@@ -12,7 +12,7 @@
 
 #include "SPI_driver.h"
 
-static MCBSP_Config MCBSP0_SPI_Cfg = {
+static MCBSP_Config MCBSP_SPI_Cfg = {
 
         MCBSP_FMKS(SPCR, FREE, NO)              |
         MCBSP_FMKS(SPCR, SOFT, NO)              |
@@ -79,25 +79,26 @@ static MCBSP_Config MCBSP0_SPI_Cfg = {
  * Sets McBSP0 as external and configures it in SPI mode for the MAX-3111.
  * Configures the MAX-3111.
  */
-void SPI_init(MCBSP_Handle* MCBSP0Handle)
+void SPI_init(MCBSP_Handle* MCBSPHandle)
 {
     DSK6713_rset(DSK6713_MISC, DSK6713_rget(DSK6713_MISC) | 0x1); // Set McBSP0 as external
 
-    if((*MCBSP0Handle)->allocated != 1)
+    /* Verifies that the Handle is opened */
+    if((*MCBSPHandle)->allocated != 1)
     {
-        *MCBSP0Handle = MCBSP_open(MCBSP_DEV0, MCBSP_OPEN_RESET);
+        *MCBSPHandle = MCBSP_open(MCBSP_DEV0, MCBSP_OPEN_RESET);
     }
 
-    MCBSP_config(*MCBSP0Handle, &MCBSP0_SPI_Cfg);                    // Config McBSP Device
+    MCBSP_config(*MCBSPHandle, &MCBSP_SPI_Cfg);                    // Config McBSP Device
 
-    MCBSP_start(*MCBSP0Handle, MCBSP_RCV_START | MCBSP_XMIT_START | MCBSP_SRGR_START | MCBSP_SRGR_FRAMESYNC, 0x00003000);
+    MCBSP_start(*MCBSPHandle, MCBSP_RCV_START | MCBSP_XMIT_START | MCBSP_SRGR_START | MCBSP_SRGR_FRAMESYNC, 0x00003000);
 
-    while(!MCBSP_xrdy(*MCBSP0Handle))
+    while(!MCBSP_xrdy(*MCBSPHandle))
     {
        ;// Wait until the MCBSP is ready
     }
 
-    MCBSP_write(*MCBSP0Handle, SPI_WRITE_CONFIG);
+    MCBSP_write(*MCBSPHandle, SPI_WRITE_CONFIG);
     DSK6713_waitusec(10);
-    MCBSP_read(*MCBSP0Handle); // Empty receive buffer
+    MCBSP_read(*MCBSPHandle); // Empty receive buffer
 }

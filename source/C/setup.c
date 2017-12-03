@@ -89,9 +89,21 @@ void pinConfig(GPIO_Handle* gpHandle, void* vectors)
     GPIO_pinDirection(*gpHandle, GPIO_PIN4, GPIO_INPUT);
     GPIO_intPolarity(*gpHandle, GPIO_GPINT4, GPIO_FALLING);
 
-    // Enable PIN4 interrupt
+    // Set pin5 as interrupt on falling edge
+    GPIO_pinEnable(*gpHandle, GPIO_PIN5);
+    GPIO_pinDirection(*gpHandle, GPIO_PIN5, GPIO_INPUT);
+    GPIO_intPolarity(*gpHandle, GPIO_GPINT5, GPIO_FALLING);
+
+    // Vap interrupt vectors
     IRQ_setVecs(vectors);
+
+    // Enable PIN4 interrupt
     IRQ_map(IRQ_EVT_GPINT4, 4);
     IRQ_reset(IRQ_EVT_GPINT4);
     IRQ_enable(IRQ_EVT_GPINT4);
+
+    // Enable PIN5 interrupt
+    IRQ_map(IRQ_EVT_GPINT5, 5);
+    IRQ_reset(IRQ_EVT_GPINT5);
+    IRQ_enable(IRQ_EVT_GPINT5);
 }
