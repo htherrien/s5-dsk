@@ -47,7 +47,9 @@ void configAndStartTimer1AsClock3000Hz(void);
 /*
  * @brief Initlializes a newly-created reference signal
  */
-void initSignalReference(Signal3AxesReference* signalReference);
+//void initSignalReference(Signal3AxesReference* signalReference);
+
+
 
 /*
  * @brief Setups pin4 as an interrupt on the falling edge
