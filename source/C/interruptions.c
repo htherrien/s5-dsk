@@ -54,7 +54,8 @@ interrupt void intTimer1(void)
     {
         if(!MCBSP0SendBuffer[indexMCBSP0])
         {
-            MCBSP_write(MCBSP0Handle, SPI_WRITE_DATA('\n'));
+            // The desktop program uses \0 as a terminator
+            MCBSP_write(MCBSP0Handle, SPI_WRITE_DATA(MCBSP0SendBuffer[indexMCBSP0]));
             DSK6713_waitusec(10);
             MCBSP_read(MCBSP0Handle);
             indexMCBSP0 = 0;
@@ -74,6 +75,7 @@ interrupt void intTimer1(void)
     {
         if(!MCBSP1SendBuffer[indexMCBSP1])
         {
+            // The desktop program uses \n as a terminator
             MCBSP_write(MCBSP1Handle, SPI_WRITE_DATA('\n'));
             DSK6713_waitusec(10);
             MCBSP_read(MCBSP1Handle);
