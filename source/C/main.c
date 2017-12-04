@@ -13,10 +13,13 @@
 #include <csl_mcbsp.h>
 #include <dsk6713_dip.h>
 #include <dsk6713.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "setup.h"
 #include "enableInterrupts.h"
 #include "SPI_driver.h"
+#include "interruptions.h"
 
 extern void vectors();
 
