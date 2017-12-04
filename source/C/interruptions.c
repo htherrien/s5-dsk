@@ -21,6 +21,7 @@
 #include "correlations3Axes.h"
 #include "faireFFT.h"
 #include "SPI_driver.h"
+#include "../../messagesUART/messagesUART.h"
 
 // FFT (daml2601)
 static float signalAFFT[2*TAILLE_FFT];
@@ -30,10 +31,12 @@ static Signal3Axes signalACorreler; // Déja aligné.
 Signal3AxesReference signalReference;
 
 #define SEND_BUFFER_SIZE 32
+#define RECEIVE_BUFFER_SIZE 32
 static unsigned char MCBSP0SendBuffer[SEND_BUFFER_SIZE];
 static int MCBSP0SendBufferBusy = 0;
 static unsigned char MCBSP1SendBuffer[SEND_BUFFER_SIZE];
 static int MCBSP1SendBufferBusy = 0;
+
 
 interrupt void intTimer0(void)
 {
@@ -121,12 +124,22 @@ void sendUART(const unsigned char* message, const int MCBSP_NO)
  */
 interrupt void c_int04(void)
 {
+    static unsigned char rxBuf[RECEIVE_BUFFER_SIZE];
+    static int rxBufIndex = 0;
     static char UARTData;
     extern MCBSP_Handle MCBSP0Handle;
 
     MCBSP_write(MCBSP0Handle, SPI_READ_DATA);
     DSK6713_waitusec(10);
-    UARTData = (MCBSP_read(MCBSP0Handle) & 0xFF);
+    rxBuf[rxBufIndex] = (MCBSP_read(MCBSP0Handle) & 0xFF);
+
+    /* Reception of a 0 byte */
+    if(!rxBuf[rxBufIndex])
+    {
+        decoderMessage(rxBuf, rxBufIndex);
+    }
+    rxBufIndex++;
+
 }
 
 /*
