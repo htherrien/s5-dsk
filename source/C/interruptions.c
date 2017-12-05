@@ -23,13 +23,6 @@
 #include "SPI_driver.h"
 #include "../../messagesUART/messagesUART.h"
 
-// FFT (daml2601)
-static float signalAFFT[2*TAILLE_FFT];
-#pragma DATA_ALIGN(signalAFFT, 8)
-
-static Signal3Axes signalACorreler; // Déja aligné.
-Signal3AxesReference signalReference;
-
 #define SEND_BUFFER_SIZE 32
 #define RECEIVE_BUFFER_SIZE 32
 static unsigned char MCBSP0SendBuffer[SEND_BUFFER_SIZE];
@@ -57,22 +50,19 @@ interrupt void intTimer1(void)
 
     if(1 == MCBSP0SendBufferBusy)
     {
-        if(!MCBSP0SendBuffer[indexMCBSP0])
+        // The PIC does not use terminating characters
+        if(MCBSP0SendBuffer[indexMCBSP0])
         {
-            // The desktop program uses \0 as a terminator
-            MCBSP_write(MCBSP0Handle, SPI_WRITE_DATA(MCBSP0SendBuffer[indexMCBSP0]));
-            DSK6713_waitusec(10);
-            MCBSP_read(MCBSP0Handle);
-            indexMCBSP0 = 0;
-            MCBSP0SendBufferBusy = 0;
 
-        }
-        else
-        {
             MCBSP_write(MCBSP0Handle, SPI_WRITE_DATA(MCBSP0SendBuffer[indexMCBSP0]));
             DSK6713_waitusec(10);
             MCBSP_read(MCBSP0Handle);
             indexMCBSP0++;
+        }
+        else
+        {
+            MCBSP0SendBufferBusy = 0;
+            indexMCBSP0 = 0;
         }
     }
 
@@ -138,11 +128,13 @@ interrupt void intReceptionMCBSP0(void)
     /* Reception of a 0 byte */
     if(!rxBuf[rxBufIndex])
     {
-        echantillonAcc = decoderMessage(rxBuf, rxBufIndex, MESSAGE_ACCEL);
-        if(echantillonAcc)
+        uint8_t decodedMessageType = 0x00;
+        echantillonAcc = decoderMessage(rxBuf, rxBufIndex, &decodedMessageType);
+        if(echantillonAcc && decodedMessageType == MESSAGE_ACCEL)
         {
             sauvegarderAcc(echantillonAcc);
         }
+
         rxBufIndex = 0;
         return;
     }
@@ -156,8 +148,24 @@ interrupt void intReceptionMCBSP1(void)
 {
     static char UARTData;
     extern MCBSP_Handle MCBSP1Handle;
+    extern int flagEnregistrement;
 
     MCBSP_write(MCBSP1Handle, SPI_READ_DATA);
     DSK6713_waitusec(10);
     UARTData = (MCBSP_read(MCBSP1Handle) & 0xFF);
+
+    if(!flagEnregistrement)
+    {
+        switch(UARTData)
+        {
+            case 1:
+                flagEnregistrement = 1;
+                break;
+            case 2:
+                flagEnregistrement = 2;
+                break;
+            default:
+                break;
+        }
+    }
 }

@@ -25,4 +25,7 @@
 
 void sauvegarderAcc(DonneeAccel* echantillonAcc);
 
+void resetSignauxReference(void);
+
+void enregistrerMouvement(DonneeAccel* echantillonAcc);
 #endif /* ACQUISITION_SIGNAL_H */

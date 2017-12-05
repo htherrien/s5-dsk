@@ -19,7 +19,13 @@
 
 #define TAILLE_FFT 256
 
-#define TAILLE_MOYENNE_MOBILE 50
+#define TAILLE_MOYENNE_MOBILE 15
+
+#define FE 400 /* Fréquence d'échantillonage */
+
+#define FSE 32 /* Fréquence de sous-échantillonage */
+
+#define FACTEUR_L (FE/FSE)
 
 /* Vérifie que la MOYENNE a un taille plus petite que la correlation */
 CASSERT(TAILLE_MOYENNE_MOBILE <= TAILLE_CORR, signaux)

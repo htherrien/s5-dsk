@@ -18,6 +18,7 @@
 
 #include "setup.h"
 #include "enableInterrupts.h"
+#include "acquisitionSignal.h"
 #include "SPI_driver.h"
 #include "interruptions.h"
 #include "../../messagesUART/messagesUART.h"
@@ -36,7 +37,9 @@ void main(void)
   SPI_init(&MCBSP0Handle, MCBSP_DEV0);
   SPI_init(&MCBSP1Handle, MCBSP_DEV1);
   pinConfig(&gp0Handle, vectors);
+  resetSignauxReference();
   enableInterrupts();
+
 
   for(;;)
   {
