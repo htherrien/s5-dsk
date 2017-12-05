@@ -37,14 +37,16 @@ static int MCBSP0SendBufferBusy = 0;
 static unsigned char MCBSP1SendBuffer[SEND_BUFFER_SIZE];
 static int MCBSP1SendBufferBusy = 0;
 
-
+/*
+ * Interruption pour le traitement de signal
+ */
 interrupt void intTimer0(void)
 {
     ;
 }
 
 /*
- * Interruption d'envoi de données UART
+ * Interruption d'envoi de données UART à une vitesse de 3000Hz
  */
 interrupt void intTimer1(void)
 {
@@ -99,17 +101,17 @@ interrupt void intTimer1(void)
 
 void sendUART(const unsigned char* message, const int MCBSP_NO)
 {
-    assert(strlen(message) < SEND_BUFFER_SIZE);
+    assert(strlen((const char*) message) < SEND_BUFFER_SIZE);
     if(MCBSP_DEV0 == MCBSP_NO)
     {
         while(MCBSP0SendBufferBusy); // Blocks the DSP is more than 1 command is received at the same time
-        strcpy(MCBSP0SendBuffer, message);
+        strcpy((char*) MCBSP0SendBuffer,(const char*) message);
         MCBSP0SendBufferBusy = 1;
     }
     else if(MCBSP_DEV1 == MCBSP_NO)
     {
         while(MCBSP1SendBufferBusy); // Blocks the DSP is more than 1 command is received at the same time
-        strcpy(MCBSP1SendBuffer, message);
+        strcpy((char*) MCBSP1SendBuffer,(const char*)  message);
         MCBSP1SendBufferBusy = 1;
     }
     else
@@ -122,12 +124,12 @@ void sendUART(const unsigned char* message, const int MCBSP_NO)
 /*
  * Interruption de réception de données du PIC.
  */
-interrupt void c_int04(void)
+interrupt void intReceptionMCBSP0(void)
 {
     static unsigned char rxBuf[RECEIVE_BUFFER_SIZE];
     static int rxBufIndex = 0;
-    static char UARTData;
     extern MCBSP_Handle MCBSP0Handle;
+    DonneeAccel* echantillonAcc;
 
     MCBSP_write(MCBSP0Handle, SPI_READ_DATA);
     DSK6713_waitusec(10);
@@ -136,16 +138,21 @@ interrupt void c_int04(void)
     /* Reception of a 0 byte */
     if(!rxBuf[rxBufIndex])
     {
-        decoderMessage(rxBuf, rxBufIndex);
+        echantillonAcc = decoderMessage(rxBuf, rxBufIndex, MESSAGE_ACCEL);
+        if(echantillonAcc)
+        {
+            sauvegarderAcc(echantillonAcc);
+        }
+        rxBufIndex = 0;
+        return;
     }
     rxBufIndex++;
-
 }
 
 /*
  * Interruption de réception de données de l'ordinateur.
  */
-interrupt void c_int05(void)
+interrupt void intReceptionMCBSP1(void)
 {
     static char UARTData;
     extern MCBSP_Handle MCBSP1Handle;

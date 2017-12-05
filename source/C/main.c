@@ -20,6 +20,7 @@
 #include "enableInterrupts.h"
 #include "SPI_driver.h"
 #include "interruptions.h"
+#include "../../messagesUART/messagesUART.h"
 
 extern void vectors();
 

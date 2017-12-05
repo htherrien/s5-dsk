@@ -13,6 +13,7 @@
 #define ACQUISITION_SIGNAL_H
 
 #include "signaux.h"
+#include "../messagesUART/messagesUART.h"
 
 #define TRESHOLD_X    40367877LL
 #define TRESHOLD_Y   810989952LL
@@ -22,5 +23,6 @@
 #define DEL_CORRELATION_REUSSIE 1
 #define DEL_CORRELATION_ECHOUEE 2
 
+void sauvegarderAcc(DonneeAccel* echantillonAcc);
 
 #endif /* ACQUISITION_SIGNAL_H */
