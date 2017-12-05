@@ -12,6 +12,9 @@
 #ifndef SETUP_H
 #define SETUP_H
 
+#include <csl_gpio.h>
+#include "signaux.h"
+
 /*
  * @brief Routine that calls the setup functions
  */
@@ -34,5 +37,23 @@ void configAndStartTimer0AsClock30Hz(void);
  *        for more information, consult spru582b.pdf
  */
 void configAndStartTimer0AsClock300Hz(void);
+
+/*
+ * @brief Configures timer 1 as a 3000 Hz timer
+ *        for more information, consult spru582b.pdf
+ */
+void configAndStartTimer1AsClock3000Hz(void);
+
+/*
+ * @brief Initlializes a newly-created reference signal
+ */
+//void initSignalReference(Signal3AxesReference* signalReference);
+
+
+
+/*
+ * @brief Setups pin4 as an interrupt on the falling edge
+ */
+void pinConfig(GPIO_Handle* gpHandle,  void* vectors);
 
 #endif /* SETUP_H */

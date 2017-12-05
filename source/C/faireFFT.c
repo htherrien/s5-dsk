@@ -27,6 +27,7 @@ int faireFFT(float signalAFFT[])
 
     /* FFT */
     DSPF_sp_cfftr2_dit(signalAFFT, w, TAILLE_FFT);
+
     /* Remise dans l'ordre normal */
     bit_rev(signalAFFT, TAILLE_FFT);
 
@@ -38,5 +39,5 @@ int faireFFT(float signalAFFT[])
             return 1;
         }
     }
-return 0;
+    return 0;
 }

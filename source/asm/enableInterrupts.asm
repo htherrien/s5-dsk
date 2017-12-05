@@ -22,6 +22,12 @@ _enableInterrupts
 	OR	B0,B1,B0
 	MVC	B0,IER
 
+	; Enable interrupt 15 (Timer 1)
+	MVC	IER,B0
+	MVK	0x8000,B1
+	OR	B0,B1,B0
+	MVC	B0,IER
+
 	; Enable nonmaskable interrupts
 	MVC	IER,B0
 	MVK	0x0002,B1

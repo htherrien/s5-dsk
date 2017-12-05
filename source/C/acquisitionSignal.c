@@ -9,154 +9,179 @@
  *
  ******************************************************************************/
 
-#include <dsk6713_led.h>
+#include <csl_mcbsp.h>
 
 #include "acquisitionSignal.h"
 #include "moyenneMobile.h"
-#include "capteurs.dat" // Signaux enregistres
-#include "capteurs440.dat"
+#include "correlations3Axes.h"
+#include "faireFFT.h"
+#include "interruptions.h"
 
-extern int dipStatus;
+/* Tampon d'acquisition des valeurs brutes */
+static Signal3Axes tamponAcqUnFltr; // Déja aligné
+/* Tampon d'acquisition filtre passe-bas */
+static Signal3Axes tamponAcqFltr;  // Déja aligné
+/* Tampon d'acquisition filtre passe-bas et sous-echantilloné */
+static Signal3Axes tamponAcqDwnsmp; // Déja aligné
 
-static Signal3Axes tamponAcquisitionFiltre; // Déja aligné
 
-void acquistionCorrelationDemo(Signal3AxesPtr *p_signalACorrelerPtr)
+static Signal3AxesReference mouvement1;     // Déja aligné
+static Signal3AxesReference mouvement2;     // Déja aligné
+
+static float signalAFFT[TAILLE_FFT*2];
+#pragma DATA_ALIGN(signalAFFT, 8);
+
+int flagEnregistrement = 0;
+
+void sauvegarderAcc(DonneeAccel* echantillonAcc)
 {
-    static int i = 0;
+    static Signal3AxesPtr tamponAcqPtr = {tamponAcqUnFltr.x, tamponAcqUnFltr.y, tamponAcqUnFltr.z};
+    static int signalAFFTIndex = 0;
+    static int compteurDownsample = 0;
+    static int indexTamponAcqFltr = 0;
+    static int indexTamponAcqDwnsmp = 0;
 
-    /* Acquisition en fonction des DIPs */
-    switch(dipStatus)
+    if(flagEnregistrement)
     {
-    case 0:
-        tamponAcquisitionFiltre.x[i] = 0;
-        tamponAcquisitionFiltre.y[i] = 0;
-        tamponAcquisitionFiltre.z[i] = 0;
-        break;
-    case 1:
-        tamponAcquisitionFiltre.x[i] = signal1_x[i];
-        tamponAcquisitionFiltre.y[i] = signal1_y[i];
-        tamponAcquisitionFiltre.z[i] = signal1_z[i];
-        break;
-    case 2:
-        tamponAcquisitionFiltre.x[i] = signal2_x[i];
-        tamponAcquisitionFiltre.y[i] = signal2_y[i];
-        tamponAcquisitionFiltre.z[i] = signal2_z[i];
-        break;
-    case 3:
-        tamponAcquisitionFiltre.x[i] = signal3_x[i];
-        tamponAcquisitionFiltre.y[i] = signal3_y[i];
-        tamponAcquisitionFiltre.z[i] = signal3_z[i];
-        break;
-    case 4:
-        tamponAcquisitionFiltre.x[i] = signal4_x[i];
-        tamponAcquisitionFiltre.y[i] = signal4_y[i];
-        tamponAcquisitionFiltre.z[i] = signal4_z[i];
-        break;
-    case 5:
-        tamponAcquisitionFiltre.x[i] = signal5_x[i];
-        tamponAcquisitionFiltre.y[i] = signal5_y[i];
-        tamponAcquisitionFiltre.z[i] = signal5_z[i];
-        break;
-    case 6:
-        tamponAcquisitionFiltre.x[i] = signal6_x[i];
-        tamponAcquisitionFiltre.y[i] = signal6_y[i];
-        tamponAcquisitionFiltre.z[i] = signal6_z[i];
-        break;
-    case 7:
-        tamponAcquisitionFiltre.x[i] = signal7_x[i];
-        tamponAcquisitionFiltre.y[i] = signal7_y[i];
-        tamponAcquisitionFiltre.z[i] = signal7_z[i];
-        break;
-    default:
-        tamponAcquisitionFiltre.x[i] = 0;
-        tamponAcquisitionFiltre.y[i] = 0;
-        tamponAcquisitionFiltre.z[i] = 0;
-        break;
+        enregistrerMouvement(echantillonAcc);
+        return;
     }
 
-    /* Filtrer le signal */
-    moyenneMobile64(&tamponAcquisitionFiltre.x[i], p_signalACorrelerPtr->x, TAILLE_MOYENNE_MOBILE);
-    moyenneMobile64(&tamponAcquisitionFiltre.y[i], p_signalACorrelerPtr->y, TAILLE_MOYENNE_MOBILE);
-    moyenneMobile64(&tamponAcquisitionFiltre.z[i], p_signalACorrelerPtr->z, TAILLE_MOYENNE_MOBILE);
+    /* FILTRAGE */
+    tamponAcqPtr.x = moyenneMobile64(tamponAcqPtr.x, &tamponAcqFltr.x[indexTamponAcqFltr], TAILLE_MOYENNE_MOBILE);
+    tamponAcqPtr.y = moyenneMobile64(tamponAcqPtr.y, &tamponAcqFltr.y[indexTamponAcqFltr], TAILLE_MOYENNE_MOBILE);
+    tamponAcqPtr.z = moyenneMobile64(tamponAcqPtr.z, &tamponAcqFltr.z[indexTamponAcqFltr], TAILLE_MOYENNE_MOBILE);
 
-    i++;
+    /* SOUS-ECHANTILLONAGE */
+    compteurDownsample++;
 
-    if(i == 64)
+    /* Reception d'un echantillon, faire la correlation */
+    if(FACTEUR_L == compteurDownsample)
     {
-        i = 0;
+        tamponAcqDwnsmp.x[indexTamponAcqDwnsmp] = tamponAcqFltr.x[indexTamponAcqFltr];
+        tamponAcqDwnsmp.y[indexTamponAcqDwnsmp] = tamponAcqFltr.y[indexTamponAcqFltr];
+        tamponAcqDwnsmp.z[indexTamponAcqDwnsmp] = tamponAcqFltr.z[indexTamponAcqFltr];
+
+        Signal3AxesPtr signalACorreler;
+        signalACorreler.x = &tamponAcqDwnsmp.x[indexTamponAcqDwnsmp];
+        signalACorreler.y = &tamponAcqDwnsmp.y[indexTamponAcqDwnsmp];
+        signalACorreler.z = &tamponAcqDwnsmp.z[indexTamponAcqDwnsmp];
+
+        /* Si la correlation avec mouvement 1 a reussi */
+        if(correler3Axes(&signalACorreler, &mouvement1))
+        {
+            /* Minimiser la fenetre */
+            sendUART("min\n", MCBSP_DEV1);
+            sendUART("i", MCBSP_DEV0); // i = 0x69
+        }
+
+        /* Si la correlation avec mouvement 2 a reussi */
+        else if(correler3Axes(&signalACorreler, &mouvement2))
+        {
+            /* Minimiser la fenetre */
+            sendUART("max\n", MCBSP_DEV1);
+            sendUART("j", MCBSP_DEV0); // j = 0x6A
+        }
+        compteurDownsample = 0;
     }
 
+    /* Buffer plein */
+    indexTamponAcqFltr++;
+    if(TAILLE_CORR == indexTamponAcqFltr)
+    {
+        indexTamponAcqFltr = 0;
+    }
+
+    indexTamponAcqDwnsmp++;
+    if(TAILLE_CORR == indexTamponAcqDwnsmp)
+    {
+        indexTamponAcqDwnsmp = 0;
+    }
+
+    /* FFT */
+    signalAFFT[signalAFFTIndex++] = echantillonAcc->y;
+
+    /* Si le tampon est rempli */
+    if(TAILLE_FFT == signalAFFTIndex)
+    {
+        faireFFT(signalAFFT);
+        signalAFFTIndex = 0;
+    }
 }
 
-void acquistionCorrelationDemoFFT(float *p_signalAFFTPtr)
+void resetSignauxReference(void)
 {
-    static int i = 0;
-
-    /* Acquisition en fonction des DIPs */
-    switch(dipStatus)
+    int i;
+    for(i = 0; i < TAILLE_CORR; i++)
     {
-    case 0:
-        *p_signalAFFTPtr = 0;
-        *(p_signalAFFTPtr+1) = 0;
-        i++;
-        if(i == 64)
-        {
-            i = 0;
-        }
-        break;
-    case 1:
-        *p_signalAFFTPtr = signal1_y440[i];
-        *(p_signalAFFTPtr+1) = 0;
-        i++;
-        if(i == tailleSignal1_x440)
-        {
-            i = 0;
-        }
-        break;
-    case 2:
-        *p_signalAFFTPtr = signal2_y440[i];
-        *(p_signalAFFTPtr+1) = 0;
-        i++;
-        if(i == tailleSignal2_x440)
-        {
-            i = 0;
-        }
-        break;
-    case 3:
-        *p_signalAFFTPtr = signal3_y440[i];
-        *(p_signalAFFTPtr+1) = 0;
-        i++;
-        if(i == tailleSignal3_x440)
-        {
-            i = 0;
-        }
-        break;
-    case 4:
-        *p_signalAFFTPtr = signal4_y440[i];
-        *(p_signalAFFTPtr+1) = 0;
-        i++;
-        if(i == tailleSignal4_x440)
-        {
-            i = 0;
-        }
-        break;
-    case 5:
-        *p_signalAFFTPtr = signal5_y440[i];
-        *(p_signalAFFTPtr+1) = 0;
-        i++;
-        if(i == tailleSignal5_x440)
-        {
-            i = 0;
-        }
-        break;
-    default:
-        *p_signalAFFTPtr = 0;
-        *(p_signalAFFTPtr+1) = 0;
-        i++;
-        if(i == 64)
-        {
-            i = 0;
-        }
-        break;
+        mouvement1.x[i] = 0;
+        mouvement1.y[i] = 0;
+        mouvement1.z[i] = 0;
+        mouvement2.x[i] = 0;
+        mouvement2.y[i] = 0;
+        mouvement2.z[i] = 0;
+    }
+    mouvement1.autocorrelX = 0;
+    mouvement1.autocorrelY = 0;
+    mouvement1.autocorrelZ = 0;
+    mouvement1.moyenneX = 0;
+    mouvement1.moyenneY = 0;
+    mouvement1.moyenneZ = 0;
+
+    mouvement2.autocorrelX = 0;
+    mouvement2.autocorrelY = 0;
+    mouvement2.autocorrelZ = 0;
+    mouvement2.moyenneX = 0;
+    mouvement2.moyenneY = 0;
+    mouvement2.moyenneZ = 0;
+}
+
+void enregistrerMouvement(DonneeAccel* echantillonAcc)
+{
+    static Signal3AxesPtr tamponAcqPtr = {tamponAcqUnFltr.x, tamponAcqUnFltr.y, tamponAcqUnFltr.z};
+    static int compteurDownsample = 0;
+    static int indexTamponAcqFltr = 0;
+    static int indexTamponAcqDwnsmp = 0;
+
+    Signal3AxesReference* mouvementSelectione = &mouvement1;
+
+    if(1 == flagEnregistrement)
+    {
+        mouvementSelectione = &mouvement1;
+    }
+    else if(2 == flagEnregistrement)
+    {
+        mouvementSelectione = &mouvement2;
+    }
+
+    /* FILTRAGE */
+    tamponAcqPtr.x = moyenneMobile64(tamponAcqPtr.x, &tamponAcqFltr.x[indexTamponAcqFltr], TAILLE_MOYENNE_MOBILE);
+    tamponAcqPtr.y = moyenneMobile64(tamponAcqPtr.y, &tamponAcqFltr.y[indexTamponAcqFltr], TAILLE_MOYENNE_MOBILE);
+    tamponAcqPtr.z = moyenneMobile64(tamponAcqPtr.z, &tamponAcqFltr.z[indexTamponAcqFltr], TAILLE_MOYENNE_MOBILE);
+
+    /* SOUS-ECHANTILLONAGE */
+    compteurDownsample++;
+
+    if(FACTEUR_L == compteurDownsample)
+    {
+        mouvementSelectione->x[indexTamponAcqDwnsmp] = tamponAcqFltr.x[indexTamponAcqFltr];
+        mouvementSelectione->y[indexTamponAcqDwnsmp] = tamponAcqFltr.y[indexTamponAcqFltr];
+        mouvementSelectione->z[indexTamponAcqDwnsmp] = tamponAcqFltr.z[indexTamponAcqFltr];
+        compteurDownsample = 0;
+    }
+
+    /* Buffer plein */
+    indexTamponAcqFltr++;
+    if(TAILLE_CORR == indexTamponAcqFltr)
+    {
+        indexTamponAcqFltr = 0;
+    }
+
+    indexTamponAcqDwnsmp++;
+    if(TAILLE_CORR == indexTamponAcqDwnsmp)
+    {
+        autoCorreler3Axes(mouvementSelectione);
+        indexTamponAcqDwnsmp = 0;
+        flagEnregistrement = 0;
     }
 }

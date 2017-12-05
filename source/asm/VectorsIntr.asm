@@ -4,8 +4,8 @@
    .global _vector1
    .global _vector2
    .global _vector3
-   .global _vector4
-   .global _vector5
+   .global _intReceptionMCBSP0 		;MCBSP0
+   .global _intReceptionMCBSP1         ;MCBSP1
    .global _vector6
    .global _vector7
    .global _vector8
@@ -15,7 +15,7 @@
    .global _vector12  
    .global _vector13   
    .global _intTimer0
-   .global _vector15
+   .global _intTimer1
 
    .ref _c_int00				;entry address
 
@@ -41,8 +41,8 @@ _vector0:   VEC_ENTRY _c_int00   	;RESET
 _vector1:   VEC_ENTRY _vec_dummy  	;NMI
 _vector2:   VEC_ENTRY _vec_dummy  	;RSVD
 _vector3:   VEC_ENTRY _vec_dummy
-_vector4:   VEC_ENTRY _vec_dummy
-_vector5:   VEC_ENTRY _vec_dummy
+_vector4:   VEC_ENTRY _intReceptionMCBSP0		;MCBSP0
+_vector5:   VEC_ENTRY _intReceptionMCBSP1       ;MCBSP1
 _vector6:   VEC_ENTRY _vec_dummy
 _vector7:   VEC_ENTRY _vec_dummy
 _vector8:   VEC_ENTRY _vec_dummy
@@ -52,4 +52,4 @@ _vector11:  VEC_ENTRY _vec_dummy
 _vector12:  VEC_ENTRY _vec_dummy
 _vector13:  VEC_ENTRY _vec_dummy
 _vector14:  VEC_ENTRY _intTimer0
-_vector15:  VEC_ENTRY _vec_dummy
+_vector15:  VEC_ENTRY _intTimer1
