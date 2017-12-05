@@ -43,9 +43,9 @@ typedef struct DonneeAccelCRC
 uint8_t* encoderAccel(DonneeAccel* donnee);
 
 /*
- * Retourne !NULL si typeDécodé == typeAttendu
+ * Retourne NULL si le décodage échoue
  */
-void* decoderMessage(uint8_t* message, uint8_t taille, const uint8_t typeAttendu);
+void* decoderMessage(uint8_t* message, uint8_t taille, uint8_t *typeDecode);
 
 #ifdef	__cplusplus
 }
