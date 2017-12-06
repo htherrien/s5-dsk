@@ -24,8 +24,7 @@ _enableInterrupts
 
 	; Enable interrupt 15 (Timer 1)
 	MVC	IER,B0
-	MVKL	0x8000,B1
-	MVKH	0x8000,B1
+	MVK	0x8000,B1
 	OR	B0,B1,B0
 	MVC	B0,IER
 

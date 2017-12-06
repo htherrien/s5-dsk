@@ -42,7 +42,7 @@ void configAndStartTimer0AsClock300Hz(void);
  * @brief Configures timer 1 as a 3000 Hz timer
  *        for more information, consult spru582b.pdf
  */
-void configAndStartTimer1AsClock3000Hz(void);
+void configAndStartTimer1AsClock8000Hz(void);
 
 /*
  * @brief Initlializes a newly-created reference signal

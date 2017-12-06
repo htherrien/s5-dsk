@@ -16,6 +16,7 @@
 #include "correlations3Axes.h"
 #include "faireFFT.h"
 #include "interruptions.h"
+#include "curseur.h"
 
 /* Tampon d'acquisition des valeurs brutes */
 static Signal3Axes tamponAcqUnFltr; // Déja aligné
@@ -36,73 +37,98 @@ int flagEnregistrement = 0;
 
 void sauvegarderAcc(DonneeAccel* echantillonAcc)
 {
+    static int callibreX = 0;
+    static int callibreY = 0;
+    static int callibreZ = 0;
+    static int nbEchCallib = 0;
+    const int NB_CALLIB = 256;
+
     static Signal3AxesPtr tamponAcqPtr = {tamponAcqUnFltr.x, tamponAcqUnFltr.y, tamponAcqUnFltr.z};
     static int signalAFFTIndex = 0;
     static int compteurDownsample = 0;
     static int indexTamponAcqDwnsmp = 0;
+
+
+    if(nbEchCallib < NB_CALLIB)
+    {
+        callibreX += echantillonAcc->x;
+        callibreY += echantillonAcc->y;
+        callibreZ += echantillonAcc->z;
+        nbEchCallib++;
+        if(nbEchCallib == NB_CALLIB)
+        {
+            callibreX = callibreX >> 8;
+            callibreY = callibreY >> 8;
+            callibreZ = callibreZ >> 8;
+        }
+        return;
+    }
+
+    /* Acquisiton d'un nouvel echantillon */
+    *tamponAcqPtr.x = echantillonAcc->x - callibreX;
+    *tamponAcqPtr.y = echantillonAcc->y - callibreY;
+    *tamponAcqPtr.z = echantillonAcc->z - callibreZ;
 
     /* FILTRAGE */
     tamponAcqPtr.x = moyenneMobile64(tamponAcqPtr.x, &tamponAcqFltr.x[indexTamponAcqFltr], TAILLE_MOYENNE_MOBILE);
     tamponAcqPtr.y = moyenneMobile64(tamponAcqPtr.y, &tamponAcqFltr.y[indexTamponAcqFltr], TAILLE_MOYENNE_MOBILE);
     tamponAcqPtr.z = moyenneMobile64(tamponAcqPtr.z, &tamponAcqFltr.z[indexTamponAcqFltr], TAILLE_MOYENNE_MOBILE);
 
-    if(flagEnregistrement)
+    if(MODE_CORRELATION == echantillonAcc->mode)
     {
-        enregistrerMouvement(echantillonAcc);
-    }
-    else
-    {
-        /* SOUS-ECHANTILLONAGE */
-        compteurDownsample++;
-
-        /* Reception d'un echantillon, faire la correlation */
-        if(FACTEUR_L == compteurDownsample)
+        if(flagEnregistrement)
         {
-            tamponAcqDwnsmp.x[indexTamponAcqDwnsmp] = tamponAcqFltr.x[indexTamponAcqFltr];
-            tamponAcqDwnsmp.y[indexTamponAcqDwnsmp] = tamponAcqFltr.y[indexTamponAcqFltr];
-            tamponAcqDwnsmp.z[indexTamponAcqDwnsmp] = tamponAcqFltr.z[indexTamponAcqFltr];
+            enregistrerMouvement(echantillonAcc);
+        }
+        else
+        {
+            /* SOUS-ECHANTILLONAGE */
+            compteurDownsample++;
 
-            Signal3AxesPtr signalACorreler;
-            signalACorreler.x = &tamponAcqDwnsmp.x[indexTamponAcqDwnsmp];
-            signalACorreler.y = &tamponAcqDwnsmp.y[indexTamponAcqDwnsmp];
-            signalACorreler.z = &tamponAcqDwnsmp.z[indexTamponAcqDwnsmp];
-
-            /* Si la correlation avec mouvement 1 a reussi */
-            if(correler3Axes(&signalACorreler, &mouvement1))
+            /* Reception d'un echantillon, faire la correlation */
+            if(FACTEUR_L == compteurDownsample)
             {
-                /* Minimiser la fenetre */
-                sendUART("min\n", MCBSP_DEV1);
-                sendUART("i", MCBSP_DEV0); // i = 0x69
+                tamponAcqDwnsmp.x[indexTamponAcqDwnsmp] = tamponAcqFltr.x[indexTamponAcqFltr];
+                tamponAcqDwnsmp.y[indexTamponAcqDwnsmp] = tamponAcqFltr.y[indexTamponAcqFltr];
+                tamponAcqDwnsmp.z[indexTamponAcqDwnsmp] = tamponAcqFltr.z[indexTamponAcqFltr];
+
+                Signal3AxesPtr signalACorreler;
+                signalACorreler.x = &tamponAcqDwnsmp.x[indexTamponAcqDwnsmp];
+                signalACorreler.y = &tamponAcqDwnsmp.y[indexTamponAcqDwnsmp];
+                signalACorreler.z = &tamponAcqDwnsmp.z[indexTamponAcqDwnsmp];
+
+                /* Si la correlation avec mouvement 1 a reussi */
+                if(correler3Axes(&signalACorreler, &mouvement1))
+                {
+                    /* Minimiser la fenetre */
+                    sendUART("min\n", MCBSP_DEV1);
+                    sendUART("i", MCBSP_DEV0); // i = 0x69
+                }
+
+                /* Si la correlation avec mouvement 2 a reussi */
+                else if(correler3Axes(&signalACorreler, &mouvement2))
+                {
+                    /* Minimiser la fenetre */
+                    sendUART("max\n", MCBSP_DEV1);
+                    sendUART("j", MCBSP_DEV0); // j = 0x6A
+                }
+                compteurDownsample = 0;
             }
 
-            /* Si la correlation avec mouvement 2 a reussi */
-            else if(correler3Axes(&signalACorreler, &mouvement2))
+            /* Tampon de sous-echantillonage plein */
+            indexTamponAcqDwnsmp++;
+            if(TAILLE_CORR == indexTamponAcqDwnsmp)
             {
-                /* Minimiser la fenetre */
-                sendUART("max\n", MCBSP_DEV1);
-                sendUART("j", MCBSP_DEV0); // j = 0x6A
+                indexTamponAcqDwnsmp = 0;
             }
-            compteurDownsample = 0;
-        }
-
-        /* Tampon de sous-echantillonage plein */
-        indexTamponAcqDwnsmp++;
-        if(TAILLE_CORR == indexTamponAcqDwnsmp)
-        {
-            indexTamponAcqDwnsmp = 0;
         }
     }
 
-
-    /* Tampon de filtrage plein */
-    indexTamponAcqFltr++;
-    if(TAILLE_CORR == indexTamponAcqFltr)
+    else if(MODE_SOURIS == echantillonAcc->mode)
     {
-        indexTamponAcqFltr = 0;
-    }
+        /* Curseur */
+        curseur(tamponAcqFltr.y[indexTamponAcqFltr], -tamponAcqFltr.x[indexTamponAcqFltr]);
 
-    if(MODE_SOURIS == echantillonAcc->mode)
-    {
         /* FFT */
         signalAFFT[signalAFFTIndex++] = echantillonAcc->y;
 
@@ -112,6 +138,13 @@ void sauvegarderAcc(DonneeAccel* echantillonAcc)
             faireFFT(signalAFFT);
             signalAFFTIndex = 0;
         }
+    }
+
+    /* Tampon de filtrage plein */
+    indexTamponAcqFltr++;
+    if(TAILLE_CORR == indexTamponAcqFltr)
+    {
+        indexTamponAcqFltr = 0;
     }
 }
 
@@ -126,6 +159,15 @@ void resetSignauxReference(void)
         mouvement2.x[i] = 0;
         mouvement2.y[i] = 0;
         mouvement2.z[i] = 0;
+        tamponAcqUnFltr.x[i] = 0;
+        tamponAcqUnFltr.y[i] = 0;
+        tamponAcqUnFltr.z[i] = 0;
+        tamponAcqFltr.x[i] = 0;
+        tamponAcqFltr.y[i] = 0;
+        tamponAcqFltr.z[i] = 0;
+        tamponAcqDwnsmp.x[i] = 0;
+        tamponAcqDwnsmp.y[i] = 0;
+        tamponAcqDwnsmp.z[i] = 0;
     }
     mouvement1.autocorrelX = 0;
     mouvement1.autocorrelY = 0;

@@ -100,9 +100,11 @@ void sendUART(const unsigned char* message, const int MCBSP_NO)
     }
     else if(MCBSP_DEV1 == MCBSP_NO)
     {
-        while(MCBSP1SendBufferBusy); // Blocks the DSP is more than 1 command is received at the same time
-        strcpy((char*) MCBSP1SendBuffer,(const char*)  message);
-        MCBSP1SendBufferBusy = 1;
+        if(!MCBSP1SendBufferBusy) // Skips the message if not avail
+        {
+            strcpy((char*) MCBSP1SendBuffer,(const char*)  message);
+            MCBSP1SendBufferBusy = 1;
+        }
     }
     else
     {
