@@ -21,6 +21,7 @@
 static Signal3Axes tamponAcqUnFltr; // Déja aligné
 /* Tampon d'acquisition filtre passe-bas */
 static Signal3Axes tamponAcqFltr;  // Déja aligné
+static int indexTamponAcqFltr = 0;
 /* Tampon d'acquisition filtre passe-bas et sous-echantilloné */
 static Signal3Axes tamponAcqDwnsmp; // Déja aligné
 
@@ -38,74 +39,79 @@ void sauvegarderAcc(DonneeAccel* echantillonAcc)
     static Signal3AxesPtr tamponAcqPtr = {tamponAcqUnFltr.x, tamponAcqUnFltr.y, tamponAcqUnFltr.z};
     static int signalAFFTIndex = 0;
     static int compteurDownsample = 0;
-    static int indexTamponAcqFltr = 0;
     static int indexTamponAcqDwnsmp = 0;
-
-    if(flagEnregistrement)
-    {
-        enregistrerMouvement(echantillonAcc);
-        return;
-    }
 
     /* FILTRAGE */
     tamponAcqPtr.x = moyenneMobile64(tamponAcqPtr.x, &tamponAcqFltr.x[indexTamponAcqFltr], TAILLE_MOYENNE_MOBILE);
     tamponAcqPtr.y = moyenneMobile64(tamponAcqPtr.y, &tamponAcqFltr.y[indexTamponAcqFltr], TAILLE_MOYENNE_MOBILE);
     tamponAcqPtr.z = moyenneMobile64(tamponAcqPtr.z, &tamponAcqFltr.z[indexTamponAcqFltr], TAILLE_MOYENNE_MOBILE);
 
-    /* SOUS-ECHANTILLONAGE */
-    compteurDownsample++;
-
-    /* Reception d'un echantillon, faire la correlation */
-    if(FACTEUR_L == compteurDownsample)
+    if(flagEnregistrement)
     {
-        tamponAcqDwnsmp.x[indexTamponAcqDwnsmp] = tamponAcqFltr.x[indexTamponAcqFltr];
-        tamponAcqDwnsmp.y[indexTamponAcqDwnsmp] = tamponAcqFltr.y[indexTamponAcqFltr];
-        tamponAcqDwnsmp.z[indexTamponAcqDwnsmp] = tamponAcqFltr.z[indexTamponAcqFltr];
+        enregistrerMouvement(echantillonAcc);
+    }
+    else
+    {
+        /* SOUS-ECHANTILLONAGE */
+        compteurDownsample++;
 
-        Signal3AxesPtr signalACorreler;
-        signalACorreler.x = &tamponAcqDwnsmp.x[indexTamponAcqDwnsmp];
-        signalACorreler.y = &tamponAcqDwnsmp.y[indexTamponAcqDwnsmp];
-        signalACorreler.z = &tamponAcqDwnsmp.z[indexTamponAcqDwnsmp];
-
-        /* Si la correlation avec mouvement 1 a reussi */
-        if(correler3Axes(&signalACorreler, &mouvement1))
+        /* Reception d'un echantillon, faire la correlation */
+        if(FACTEUR_L == compteurDownsample)
         {
-            /* Minimiser la fenetre */
-            sendUART("min\n", MCBSP_DEV1);
-            sendUART("i", MCBSP_DEV0); // i = 0x69
+            tamponAcqDwnsmp.x[indexTamponAcqDwnsmp] = tamponAcqFltr.x[indexTamponAcqFltr];
+            tamponAcqDwnsmp.y[indexTamponAcqDwnsmp] = tamponAcqFltr.y[indexTamponAcqFltr];
+            tamponAcqDwnsmp.z[indexTamponAcqDwnsmp] = tamponAcqFltr.z[indexTamponAcqFltr];
+
+            Signal3AxesPtr signalACorreler;
+            signalACorreler.x = &tamponAcqDwnsmp.x[indexTamponAcqDwnsmp];
+            signalACorreler.y = &tamponAcqDwnsmp.y[indexTamponAcqDwnsmp];
+            signalACorreler.z = &tamponAcqDwnsmp.z[indexTamponAcqDwnsmp];
+
+            /* Si la correlation avec mouvement 1 a reussi */
+            if(correler3Axes(&signalACorreler, &mouvement1))
+            {
+                /* Minimiser la fenetre */
+                sendUART("min\n", MCBSP_DEV1);
+                sendUART("i", MCBSP_DEV0); // i = 0x69
+            }
+
+            /* Si la correlation avec mouvement 2 a reussi */
+            else if(correler3Axes(&signalACorreler, &mouvement2))
+            {
+                /* Minimiser la fenetre */
+                sendUART("max\n", MCBSP_DEV1);
+                sendUART("j", MCBSP_DEV0); // j = 0x6A
+            }
+            compteurDownsample = 0;
         }
 
-        /* Si la correlation avec mouvement 2 a reussi */
-        else if(correler3Axes(&signalACorreler, &mouvement2))
+        /* Tampon de sous-echantillonage plein */
+        indexTamponAcqDwnsmp++;
+        if(TAILLE_CORR == indexTamponAcqDwnsmp)
         {
-            /* Minimiser la fenetre */
-            sendUART("max\n", MCBSP_DEV1);
-            sendUART("j", MCBSP_DEV0); // j = 0x6A
+            indexTamponAcqDwnsmp = 0;
         }
-        compteurDownsample = 0;
     }
 
-    /* Buffer plein */
+
+    /* Tampon de filtrage plein */
     indexTamponAcqFltr++;
     if(TAILLE_CORR == indexTamponAcqFltr)
     {
         indexTamponAcqFltr = 0;
     }
 
-    indexTamponAcqDwnsmp++;
-    if(TAILLE_CORR == indexTamponAcqDwnsmp)
+    if(MODE_SOURIS == echantillonAcc->mode)
     {
-        indexTamponAcqDwnsmp = 0;
-    }
+        /* FFT */
+        signalAFFT[signalAFFTIndex++] = echantillonAcc->y;
 
-    /* FFT */
-    signalAFFT[signalAFFTIndex++] = echantillonAcc->y;
-
-    /* Si le tampon est rempli */
-    if(TAILLE_FFT == signalAFFTIndex)
-    {
-        faireFFT(signalAFFT);
-        signalAFFTIndex = 0;
+        /* Si le tampon est rempli */
+        if(TAILLE_FFT == signalAFFTIndex)
+        {
+            faireFFT(signalAFFT);
+            signalAFFTIndex = 0;
+        }
     }
 }
 
@@ -138,9 +144,7 @@ void resetSignauxReference(void)
 
 void enregistrerMouvement(DonneeAccel* echantillonAcc)
 {
-    static Signal3AxesPtr tamponAcqPtr = {tamponAcqUnFltr.x, tamponAcqUnFltr.y, tamponAcqUnFltr.z};
     static int compteurDownsample = 0;
-    static int indexTamponAcqFltr = 0;
     static int indexTamponAcqDwnsmp = 0;
 
     Signal3AxesReference* mouvementSelectione = &mouvement1;
@@ -154,11 +158,6 @@ void enregistrerMouvement(DonneeAccel* echantillonAcc)
         mouvementSelectione = &mouvement2;
     }
 
-    /* FILTRAGE */
-    tamponAcqPtr.x = moyenneMobile64(tamponAcqPtr.x, &tamponAcqFltr.x[indexTamponAcqFltr], TAILLE_MOYENNE_MOBILE);
-    tamponAcqPtr.y = moyenneMobile64(tamponAcqPtr.y, &tamponAcqFltr.y[indexTamponAcqFltr], TAILLE_MOYENNE_MOBILE);
-    tamponAcqPtr.z = moyenneMobile64(tamponAcqPtr.z, &tamponAcqFltr.z[indexTamponAcqFltr], TAILLE_MOYENNE_MOBILE);
-
     /* SOUS-ECHANTILLONAGE */
     compteurDownsample++;
 
@@ -168,13 +167,6 @@ void enregistrerMouvement(DonneeAccel* echantillonAcc)
         mouvementSelectione->y[indexTamponAcqDwnsmp] = tamponAcqFltr.y[indexTamponAcqFltr];
         mouvementSelectione->z[indexTamponAcqDwnsmp] = tamponAcqFltr.z[indexTamponAcqFltr];
         compteurDownsample = 0;
-    }
-
-    /* Buffer plein */
-    indexTamponAcqFltr++;
-    if(TAILLE_CORR == indexTamponAcqFltr)
-    {
-        indexTamponAcqFltr = 0;
     }
 
     indexTamponAcqDwnsmp++;
