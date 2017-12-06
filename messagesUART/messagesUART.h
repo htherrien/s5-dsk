@@ -20,12 +20,16 @@ extern "C" {
 #define TAILLE_EXTRA_COBS_ENCODE 1
 #define TAILLE_EXTRA_COBS_DECODE 2
 
+#define MODE_SOURIS 0x10
+#define MODE_CORRELATION 0x20
+
 typedef struct DonneeAccel
 {
     int16_t header;
     int16_t x;
     int16_t y;
     int16_t z;
+    int16_t mode;
 }DonneeAccel;
 #define TAILLE_MESSAGE_ACCEL sizeof(DonneeAccel)
 
@@ -35,6 +39,7 @@ typedef struct DonneeAccelCRC
     int16_t x;
     int16_t y;
     int16_t z;
+    int16_t mode;
     int16_t crc8;
 }DonneeAccelCRC;
 
