@@ -15,8 +15,6 @@
 #include "correlationASM.h"
 #include "correlations3Axes.h"
 
-#define TRESHOLD_CORREL 0.90F
-
 void correler3AxesDemo(Signal3AxesPtr* p_signalACorrelerPtr, Signal3AxesReference* p_signal3AxesReference)
 {
     /* Effectuer la correlation */
@@ -57,11 +55,12 @@ void correler3AxesDemo(Signal3AxesPtr* p_signalACorrelerPtr, Signal3AxesReferenc
 
 }
 
-int correler3Axes(Signal3AxesPtr* p_signalACorrelerPtr, Signal3AxesReference* p_signal3AxesReference)
+uint8_t correler3Axes(Signal3AxesPtr* p_signalACorrelerPtr, Signal3AxesReference* p_signal3AxesReference)
 {
     /* Effectuer la correlation */
     long long resultatCorrX, resultatCorrY, resultatCorrZ;
     float ratioX, ratioY, ratioZ;// Ratio des moyennes
+    float min;
     int moyenneX, moyenneY, moyenneZ;
 
 
@@ -85,7 +84,17 @@ int correler3Axes(Signal3AxesPtr* p_signalACorrelerPtr, Signal3AxesReference* p_
     ratioZ = ((float)moyenneZ/(float)p_signal3AxesReference->moyenneZ)*
             ((float)resultatCorrZ/(float)p_signal3AxesReference->autocorrelZ);
 
-  return (ratioX > TRESHOLD_CORREL && ratioY > TRESHOLD_CORREL && ratioZ > TRESHOLD_CORREL) ? 1 : 0;
+    min = ratioX;
+    if(ratioY < min)
+    {
+        min = ratioY;
+    }
+    if(ratioZ < min)
+    {
+        min = ratioZ;
+    }
+
+    return (uint8_t)(min * 100);
 }
 
 

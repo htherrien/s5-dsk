@@ -26,14 +26,12 @@ static int indexTamponAcqFltr = 0;
 /* Tampon d'acquisition filtre passe-bas et sous-echantilloné */
 static Signal3Axes tamponAcqDwnsmp; // Déja aligné
 
-
-static Signal3AxesReference mouvement1;     // Déja aligné
-static Signal3AxesReference mouvement2;     // Déja aligné
+static Signal3AxesReference mouvementsEnregistres[NB_MOUVEMENTS];     // Déja aligné
 
 static float signalAFFT[TAILLE_FFT*2];
 #pragma DATA_ALIGN(signalAFFT, 8);
 
-int flagEnregistrement = 0;
+Mouvements flagEnregistrement = AUCUN_MOUVEMENT;
 
 void sauvegarderAcc(DonneeAccel* echantillonAcc)
 {
@@ -48,6 +46,14 @@ void sauvegarderAcc(DonneeAccel* echantillonAcc)
     static int compteurDownsample = 0;
     static int indexTamponAcqDwnsmp = 0;
 
+    const char* mouvementsCommandesUART[] =
+    {
+        "max",  // MOUVEMENT_MAXIMISER
+        "min",  // MOUVEMENT_MINIMISER
+        "ferm", // MOUVEMENT_FERMER
+        "",     // NB_MOUVEMENTS
+        ""      // AUCUN_MOUVEMENT
+    };
 
     if(nbEchCallib < NB_CALLIB)
     {
@@ -76,7 +82,7 @@ void sauvegarderAcc(DonneeAccel* echantillonAcc)
 
     if(MODE_CORRELATION == echantillonAcc->mode)
     {
-        if(flagEnregistrement)
+        if(flagEnregistrement != AUCUN_MOUVEMENT)
         {
             enregistrerMouvement(echantillonAcc);
         }
@@ -88,6 +94,9 @@ void sauvegarderAcc(DonneeAccel* echantillonAcc)
             /* Reception d'un echantillon, faire la correlation */
             if(FACTEUR_L == compteurDownsample)
             {
+                Mouvements i, indexMax = AUCUN_MOUVEMENT;
+                uint8_t maximumCorr = 0;
+
                 tamponAcqDwnsmp.x[indexTamponAcqDwnsmp] = tamponAcqFltr.x[indexTamponAcqFltr];
                 tamponAcqDwnsmp.y[indexTamponAcqDwnsmp] = tamponAcqFltr.y[indexTamponAcqFltr];
                 tamponAcqDwnsmp.z[indexTamponAcqDwnsmp] = tamponAcqFltr.z[indexTamponAcqFltr];
@@ -97,20 +106,24 @@ void sauvegarderAcc(DonneeAccel* echantillonAcc)
                 signalACorreler.y = &tamponAcqDwnsmp.y[indexTamponAcqDwnsmp];
                 signalACorreler.z = &tamponAcqDwnsmp.z[indexTamponAcqDwnsmp];
 
-                /* Si la correlation avec mouvement 1 a reussi */
-                if(correler3Axes(&signalACorreler, &mouvement1))
+                for(i = MOUVEMENT_MAXIMISER; i < NB_MOUVEMENTS; i++)
                 {
-                    /* Minimiser la fenetre */
-                    sendUART("min\n", MCBSP_DEV1);
-                    sendUART("i", MCBSP_DEV0); // i = 0x69
+                    uint8_t resCorr;
+                    resCorr = correler3Axes(&signalACorreler, &mouvementsEnregistres[i]);
+                    if(resCorr > maximumCorr)
+                    {
+                        maximumCorr = resCorr;
+                        indexMax = i;
+                    }
                 }
 
-                /* Si la correlation avec mouvement 2 a reussi */
-                else if(correler3Axes(&signalACorreler, &mouvement2))
+                /* Envoyer le résultat maximal de la correlation au PIC en tout temps */
+                sendUART((const char*) &maximumCorr, MCBSP_DEV0);
+
+                /* Envoyer le résultat maximal de la correlation au PIC si dépasse le seuil */
+                if(maximumCorr > TRESHOLD_CORREL)
                 {
-                    /* Minimiser la fenetre */
-                    sendUART("max\n", MCBSP_DEV1);
-                    sendUART("j", MCBSP_DEV0); // j = 0x6A
+                    sendUART(mouvementsCommandesUART[indexMax], MCBSP_DEV1);
                 }
                 compteurDownsample = 0;
             }
@@ -153,12 +166,6 @@ void resetSignauxReference(void)
     int i;
     for(i = 0; i < TAILLE_CORR; i++)
     {
-        mouvement1.x[i] = 0;
-        mouvement1.y[i] = 0;
-        mouvement1.z[i] = 0;
-        mouvement2.x[i] = 0;
-        mouvement2.y[i] = 0;
-        mouvement2.z[i] = 0;
         tamponAcqUnFltr.x[i] = 0;
         tamponAcqUnFltr.y[i] = 0;
         tamponAcqUnFltr.z[i] = 0;
@@ -169,19 +176,23 @@ void resetSignauxReference(void)
         tamponAcqDwnsmp.y[i] = 0;
         tamponAcqDwnsmp.z[i] = 0;
     }
-    mouvement1.autocorrelX = 0;
-    mouvement1.autocorrelY = 0;
-    mouvement1.autocorrelZ = 0;
-    mouvement1.moyenneX = 0;
-    mouvement1.moyenneY = 0;
-    mouvement1.moyenneZ = 0;
 
-    mouvement2.autocorrelX = 0;
-    mouvement2.autocorrelY = 0;
-    mouvement2.autocorrelZ = 0;
-    mouvement2.moyenneX = 0;
-    mouvement2.moyenneY = 0;
-    mouvement2.moyenneZ = 0;
+    Mouvements j;
+    for(j = MOUVEMENT_MAXIMISER; j < NB_MOUVEMENTS; j++)
+    {
+        for(i = 0; i < TAILLE_CORR; i++)
+        {
+            mouvementsEnregistres[j].x[i] = 0;
+            mouvementsEnregistres[j].y[i] = 0;
+            mouvementsEnregistres[j].z[i] = 0;
+        }
+        mouvementsEnregistres[j].autocorrelX = 0;
+        mouvementsEnregistres[j].autocorrelY = 0;
+        mouvementsEnregistres[j].autocorrelZ = 0;
+        mouvementsEnregistres[j].moyenneX = 0;
+        mouvementsEnregistres[j].moyenneY = 0;
+        mouvementsEnregistres[j].moyenneZ = 0;
+    }
 }
 
 void enregistrerMouvement(DonneeAccel* echantillonAcc)
@@ -189,16 +200,9 @@ void enregistrerMouvement(DonneeAccel* echantillonAcc)
     static int compteurDownsample = 0;
     static int indexTamponAcqDwnsmp = 0;
 
-    Signal3AxesReference* mouvementSelectione = &mouvement1;
+    Signal3AxesReference* mouvementSelectione;
 
-    if(1 == flagEnregistrement)
-    {
-        mouvementSelectione = &mouvement1;
-    }
-    else if(2 == flagEnregistrement)
-    {
-        mouvementSelectione = &mouvement2;
-    }
+    mouvementSelectione = &mouvementsEnregistres[flagEnregistrement];
 
     /* SOUS-ECHANTILLONAGE */
     compteurDownsample++;
@@ -216,6 +220,6 @@ void enregistrerMouvement(DonneeAccel* echantillonAcc)
     {
         autoCorreler3Axes(mouvementSelectione);
         indexTamponAcqDwnsmp = 0;
-        flagEnregistrement = 0;
+        flagEnregistrement = AUCUN_MOUVEMENT;
     }
 }
