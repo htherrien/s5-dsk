@@ -69,33 +69,6 @@ void configAndStartTimer1AsClock8000Hz(void)
     CTL1 |= 0x000000C0; /* Start timer */
 }
 
-/*!! Lors de l'acquisition, il va falloir prévoir un tampon de taille TAILLE_CORR + TAILLE_MOYENNE_MOBILE
-void initSignalReference(Signal3AxesReference* signalReference)
-{
-    int i;
-    Signal3AxesReference tampon_acquisition;
-    int signal1_x[], signal1_y[], signal1_z[];
-
-    for(i = 0; i < TAILLE_CORR; i++)
-    {
-        tampon_acquisition.x[i] = signal1_x[i];
-        tampon_acquisition.y[i] = signal1_y[i];
-        tampon_acquisition.z[i] = signal1_z[i];
-    }
-    Filtrage du signal
-    for(i = 0; i < TAILLE_CORR; i++)
-    {
-        moyenneMobile64(&tampon_acquisition.x[i], &signalReference->x[i], TAILLE_MOYENNE_MOBILE);
-        moyenneMobile64(&tampon_acquisition.y[i], &signalReference->y[i], TAILLE_MOYENNE_MOBILE);
-        moyenneMobile64(&tampon_acquisition.z[i], &signalReference->z[i], TAILLE_MOYENNE_MOBILE);
-    }
-
-    autoCorreler3Axes(signalReference);
-}
-
-*/
-
-
 void pinConfig(GPIO_Handle* gpHandle, void* vectors)
 {
     // Set pin4 as interrupt on falling edge

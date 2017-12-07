@@ -45,13 +45,6 @@ void configAndStartTimer0AsClock300Hz(void);
 void configAndStartTimer1AsClock8000Hz(void);
 
 /*
- * @brief Initlializes a newly-created reference signal
- */
-//void initSignalReference(Signal3AxesReference* signalReference);
-
-
-
-/*
  * @brief Setups pin4 as an interrupt on the falling edge
  */
 void pinConfig(GPIO_Handle* gpHandle,  void* vectors);
