@@ -94,15 +94,19 @@ void sendUART(const unsigned char* message, const int MCBSP_NO)
     assert(strlen((const char*) message) < SEND_BUFFER_SIZE);
     if(MCBSP_DEV0 == MCBSP_NO)
     {
-        while(MCBSP0SendBufferBusy); // Blocks the DSP is more than 1 command is received at the same time
-        strcpy((char*) MCBSP0SendBuffer,(const char*) message);
-        MCBSP0SendBufferBusy = 1;
+        if(!MCBSP0SendBufferBusy) // Skips the message if not avail
+        {
+            strcpy((char*) MCBSP0SendBuffer,(const char*) message);
+            MCBSP0SendBufferBusy = 1;
+        }
     }
     else if(MCBSP_DEV1 == MCBSP_NO)
     {
-        while(MCBSP1SendBufferBusy); // Blocks the DSP is more than 1 command is received at the same time
-        strcpy((char*) MCBSP1SendBuffer,(const char*)  message);
-        MCBSP1SendBufferBusy = 1;
+        if(!MCBSP1SendBufferBusy) // Skips the message if not avail
+        {
+            strcpy((char*) MCBSP1SendBuffer,(const char*)  message);
+            MCBSP1SendBufferBusy = 1;
+        }
     }
     else
     {
@@ -148,21 +152,24 @@ interrupt void intReceptionMCBSP1(void)
 {
     static char UARTData;
     extern MCBSP_Handle MCBSP1Handle;
-    extern int flagEnregistrement;
+    extern Mouvements flagEnregistrement;
 
     MCBSP_write(MCBSP1Handle, SPI_READ_DATA);
     DSK6713_waitusec(10);
     UARTData = (MCBSP_read(MCBSP1Handle) & 0xFF);
 
-    if(!flagEnregistrement)
+    if(AUCUN_MOUVEMENT == flagEnregistrement)
     {
         switch(UARTData)
         {
-            case 1:
-                flagEnregistrement = 1;
+            case MOUVEMENT_MAXIMISER:
+                flagEnregistrement = MOUVEMENT_MAXIMISER;
                 break;
-            case 2:
-                flagEnregistrement = 2;
+            case MOUVEMENT_MINIMISER:
+                flagEnregistrement = MOUVEMENT_MINIMISER;
+                break;
+            case MOUVEMENT_FERMER:
+                flagEnregistrement = MOUVEMENT_FERMER;
                 break;
             default:
                 break;

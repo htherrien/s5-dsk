@@ -23,6 +23,17 @@
 #define DEL_CORRELATION_REUSSIE 1
 #define DEL_CORRELATION_ECHOUEE 2
 
+#define TRESHOLD_CORREL 95
+
+typedef enum mouvements
+{
+    MOUVEMENT_MAXIMISER = 0,
+    MOUVEMENT_MINIMISER = 1,
+    MOUVEMENT_FERMER = 2,
+    NB_MOUVEMENTS,
+    AUCUN_MOUVEMENT
+}Mouvements;
+
 void sauvegarderAcc(DonneeAccel* echantillonAcc);
 
 void resetSignauxReference(void);

@@ -22,7 +22,7 @@ void setup(void)
 {
     DSK6713_LED_init();
     configAndStartTimer0AsClock300Hz();
-    configAndStartTimer1AsClock3000Hz();
+    configAndStartTimer1AsClock8000Hz();
 }
 
 void configAndStartTimer0AsClock10Hz(void)
@@ -58,43 +58,16 @@ void configAndStartTimer0AsClock300Hz(void)
     CTL0 |= 0x000000C0; /* Start timer */
 }
 
-void configAndStartTimer1AsClock3000Hz(void)
+void configAndStartTimer1AsClock8000Hz(void)
 {
     CTL1 &= ~0x00000080; /* Put clock in hold */
-    PRD1  = 9375;        /* Set clock frequency to 3000 Hz */
+    PRD1  = 3516;        /* Set clock frequency to 8000 Hz */
     CTL1 |= 0x00000200; /* Set internal clock source */
     CTL1 |= 0x00000100; /* Set as clock mode */
     CTL1 |= 0x00000004; /* TSTAT is driven on TOUT */
     CTL1 |= 0x00000001; /* TOUT is a timer output pin */
     CTL1 |= 0x000000C0; /* Start timer */
 }
-
-/*!! Lors de l'acquisition, il va falloir prévoir un tampon de taille TAILLE_CORR + TAILLE_MOYENNE_MOBILE
-void initSignalReference(Signal3AxesReference* signalReference)
-{
-    int i;
-    Signal3AxesReference tampon_acquisition;
-    int signal1_x[], signal1_y[], signal1_z[];
-
-    for(i = 0; i < TAILLE_CORR; i++)
-    {
-        tampon_acquisition.x[i] = signal1_x[i];
-        tampon_acquisition.y[i] = signal1_y[i];
-        tampon_acquisition.z[i] = signal1_z[i];
-    }
-    Filtrage du signal
-    for(i = 0; i < TAILLE_CORR; i++)
-    {
-        moyenneMobile64(&tampon_acquisition.x[i], &signalReference->x[i], TAILLE_MOYENNE_MOBILE);
-        moyenneMobile64(&tampon_acquisition.y[i], &signalReference->y[i], TAILLE_MOYENNE_MOBILE);
-        moyenneMobile64(&tampon_acquisition.z[i], &signalReference->z[i], TAILLE_MOYENNE_MOBILE);
-    }
-
-    autoCorreler3Axes(signalReference);
-}
-
-*/
-
 
 void pinConfig(GPIO_Handle* gpHandle, void* vectors)
 {

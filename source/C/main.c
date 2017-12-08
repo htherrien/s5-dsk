@@ -40,6 +40,14 @@ void main(void)
   resetSignauxReference();
   enableInterrupts();
 
+  MCBSP_write(MCBSP0Handle, SPI_READ_DATA);
+  DSK6713_waitusec(10);
+  MCBSP_read(MCBSP0Handle);
+
+  MCBSP_write(MCBSP1Handle, SPI_READ_DATA);
+  DSK6713_waitusec(10);
+  MCBSP_read(MCBSP1Handle);
+
 
   for(;;)
   {

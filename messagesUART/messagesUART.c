@@ -47,7 +47,6 @@ void* decoderMessage(uint8_t* message, uint8_t taille, uint8_t *typeDecode)
         {
             *typeDecode = MESSAGE_ACCEL;
             return tamponDecodage;
-            break;
         }
         default:
             break;

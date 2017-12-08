@@ -23,7 +23,7 @@
 
 #define FE 400 /* Fréquence d'échantillonage */
 
-#define FSE 32 /* Fréquence de sous-échantillonage */
+#define FSE 40 /* Fréquence de sous-échantillonage */
 
 #define FACTEUR_L (FE/FSE)
 

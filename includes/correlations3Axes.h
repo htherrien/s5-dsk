@@ -12,15 +12,13 @@
 #ifndef CORRELATION_3_AXES_H
 #define CORRELATION_3_AXES_H
 
+#include <stdint.h>
 #include "signaux.h"
 
-void correler3AxesDemo(Signal3AxesPtr* p_signalACorrelerPtr, Signal3AxesReference* p_signal3AxesReference);
-
 /*
- * Effectue la correlation sur les 3 axes et retourne 1 si le signal à correler est suffisament semblable
- * au signal de référence
+ * Effectue la correlation sur les 3 axes et retourne la plus faible valeur de corrélation en pourcentage
  */
-int correler3Axes(Signal3AxesPtr* p_signalACorrelerPtr, Signal3AxesReference* p_signal3AxesReference);
+uint8_t correler3Axes(Signal3AxesPtr* p_signalACorrelerPtr, Signal3AxesReference* p_signal3AxesReference);
 
 /*
  * Remplit la structure Signal3AxesReference à partir des données comprises dans ses champs x,y et z
