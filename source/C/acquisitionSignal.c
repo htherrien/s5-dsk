@@ -45,6 +45,7 @@ void sauvegarderAcc(DonneeAccel* echantillonAcc)
     static int signalAFFTIndex = 0;
     static int compteurDownsample = 0;
     static int indexTamponAcqDwnsmp = 0;
+    static int ancienMode = MODE_CORRELATION;
 
     const char* mouvementsCommandesUART[] =
     {
@@ -134,23 +135,43 @@ void sauvegarderAcc(DonneeAccel* echantillonAcc)
             {
                 indexTamponAcqDwnsmp = 0;
             }
+
+            /* FFT */
+            signalAFFT[signalAFFTIndex*2] = echantillonAcc->y;
+            signalAFFT[signalAFFTIndex*2 + 1] = 0;
+            signalAFFTIndex++;
+
+            /* Si le tampon est rempli */
+            if(TAILLE_FFT == signalAFFTIndex)
+            {
+                /* Envoyer un clic gauche si mouvement reussi */
+                if(faireFFT(signalAFFT))
+                {
+                    sendUART("cg", MCBSP_DEV1);
+                }
+                signalAFFTIndex = 0;
+            }
+
         }
     }
 
     else if(MODE_SOURIS == echantillonAcc->mode)
     {
-        /* Curseur */
-        curseur(tamponAcqFltr.y[indexTamponAcqFltr], -tamponAcqFltr.x[indexTamponAcqFltr]);
-
-        /* FFT */
-        signalAFFT[signalAFFTIndex++] = echantillonAcc->y;
-
-        /* Si le tampon est rempli */
-        if(TAILLE_FFT == signalAFFTIndex)
+        /* Vider le tampon si l'on passe de mode correlation a mode souris */
+        if(MODE_CORRELATION == ancienMode)
         {
-            faireFFT(signalAFFT);
-            signalAFFTIndex = 0;
+            int i;
+            for(i = 0; i < TAILLE_CORR; i++)
+            {
+                tamponAcqDwnsmp.x[i] = 0;
+                tamponAcqDwnsmp.y[i] = 0;
+                tamponAcqDwnsmp.z[i] = 0;
+            }
         }
+
+
+        /* Curseur */
+        curseur(tamponAcqFltr.y[indexTamponAcqFltr], tamponAcqFltr.x[indexTamponAcqFltr]);
     }
 
     /* Tampon de filtrage plein */
@@ -159,6 +180,8 @@ void sauvegarderAcc(DonneeAccel* echantillonAcc)
     {
         indexTamponAcqFltr = 0;
     }
+
+    ancienMode = echantillonAcc->mode;
 }
 
 void resetSignauxReference(void)
@@ -186,12 +209,13 @@ void resetSignauxReference(void)
             mouvementsEnregistres[j].y[i] = 0;
             mouvementsEnregistres[j].z[i] = 0;
         }
-        mouvementsEnregistres[j].autocorrelX = 0;
-        mouvementsEnregistres[j].autocorrelY = 0;
-        mouvementsEnregistres[j].autocorrelZ = 0;
-        mouvementsEnregistres[j].moyenneX = 0;
-        mouvementsEnregistres[j].moyenneY = 0;
-        mouvementsEnregistres[j].moyenneZ = 0;
+        // Pour éviter la division par 0
+        mouvementsEnregistres[j].autocorrelX = 1;
+        mouvementsEnregistres[j].autocorrelY = 1;
+        mouvementsEnregistres[j].autocorrelZ = 1;
+        mouvementsEnregistres[j].moyenneX = 1;
+        mouvementsEnregistres[j].moyenneY = 1;
+        mouvementsEnregistres[j].moyenneZ = 1;
     }
 }
 
@@ -212,14 +236,16 @@ void enregistrerMouvement(DonneeAccel* echantillonAcc)
         mouvementSelectione->x[indexTamponAcqDwnsmp] = tamponAcqFltr.x[indexTamponAcqFltr];
         mouvementSelectione->y[indexTamponAcqDwnsmp] = tamponAcqFltr.y[indexTamponAcqFltr];
         mouvementSelectione->z[indexTamponAcqDwnsmp] = tamponAcqFltr.z[indexTamponAcqFltr];
+        indexTamponAcqDwnsmp++;
         compteurDownsample = 0;
     }
 
-    indexTamponAcqDwnsmp++;
+
     if(TAILLE_CORR == indexTamponAcqDwnsmp)
     {
         autoCorreler3Axes(mouvementSelectione);
         indexTamponAcqDwnsmp = 0;
+        sendUART("et", MCBSP_DEV1);
         flagEnregistrement = AUCUN_MOUVEMENT;
     }
 }

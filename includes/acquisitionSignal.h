@@ -23,7 +23,7 @@
 #define DEL_CORRELATION_REUSSIE 1
 #define DEL_CORRELATION_ECHOUEE 2
 
-#define TRESHOLD_CORREL 0.90F
+#define TRESHOLD_CORREL 95
 
 typedef enum mouvements
 {
